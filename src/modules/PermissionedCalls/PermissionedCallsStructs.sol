@@ -9,11 +9,19 @@
 
 pragma solidity 0.8.18;
 
-interface ICalls {
-  struct ExecuteRequest {
+library PermissionedCallsStructs {
+  struct ExecuteRequestPermitted {
+    address executor;
     address target;
     uint256 value;
-    uint256 nonce;
     bytes data;
+  }
+
+  struct ExecuteRequestPermission {
+    uint64 unlockTimestamp;
+    uint64 lastExecuteTimestamp;
+    uint32 minExecuteInterval;
+    uint32 executeCount;
+    uint32 maxExecutes;
   }
 }

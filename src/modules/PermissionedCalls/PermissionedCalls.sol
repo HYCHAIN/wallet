@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: Commons-Clause-1.0
+//  __  __     _        ___     _
+// |  \/  |___| |_ __ _| __|_ _| |__
+// | |\/| / -_)  _/ _` | _/ _` | '_ \
+// |_|  |_\___|\__\__,_|_|\__,_|_.__/
+//
+// Launch your crypto game or gamefi project's blockchain
+// infrastructure & game APIs fast with https://trymetafab.com
+
 pragma solidity 0.8.18;
 
-import "./interfaces/IPermissionedCalls.sol";
-import "./Calls.sol";
+import "./IPermissionedCalls.sol";
+import "../Calls/Calls.sol";
+import "./PermissionedCallsStorage.sol";
 
 abstract contract PermissionedCalls is IPermissionedCalls, Calls {
-  mapping(bytes32 => ExecuteRequestPermission) private executeRequestPermissions;
-
   function permitExecute(
-    ExecuteRequestPermitted calldata _executeRequestPermitted,
-    ExecuteRequestPermission calldata _executeRequestPermission,
+    PermissionedCallsStructs.ExecuteRequestPermitted calldata _executeRequestPermitted,
+    PermissionedCallsStructs.ExecuteRequestPermission calldata _executeRequestPermission,
     uint256 _nonce,
     bytes[] calldata _signatures
   )
@@ -18,7 +25,7 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
   {
     require(_executeRequestPermission.maxExecutes > 0, "ExecuteRequestPermission.maxExecutes must not be 0");
 
-    executeRequestPermissions[
+    PermissionedCallsStorage.layout().executeRequestPermissions[
       keccak256(
         abi.encode(
           _executeRequestPermitted.executor,
@@ -31,14 +38,14 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
   }
 
   function unpermitExecute(
-    ExecuteRequestPermitted calldata _executeRequestPermitted,
+    PermissionedCallsStructs.ExecuteRequestPermitted calldata _executeRequestPermitted,
     uint256 _nonce,
     bytes[] calldata _signatures
   )
     external
     meetsControllersThreshold(keccak256(abi.encode(_executeRequestPermitted, _nonce, block.chainid)), _signatures)
   {
-    delete executeRequestPermissions[
+    delete PermissionedCallsStorage.layout().executeRequestPermissions[
       keccak256(
         abi.encode(
           _executeRequestPermitted.executor,
@@ -50,17 +57,12 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
     ];
   }
 
-  function permittedExecute(ExecuteRequest calldata _executeRequest) public returns (bytes memory) {
-    ExecuteRequestPermission storage erp = executeRequestPermissions[
-      keccak256(
-        abi.encode(
-          msg.sender,
-          _executeRequest.target,
-          _executeRequest.value,
-          _executeRequest.data
-        )
-      )
-    ];
+  function permittedExecute(CallsStructs.ExecuteRequest calldata _executeRequest) public returns (bytes memory) {
+    PermissionedCallsStructs.ExecuteRequestPermission storage erp = getExecuteRequestPermission(msg.sender, _executeRequest);
+
+    if (erp.maxExecutes == 0) { // check if permitted by any executor.
+      erp = getExecuteRequestPermission(address(0), _executeRequest);
+    }
 
     require(erp.maxExecutes > 0, "Execution not permitted");
     require(erp.unlockTimestamp == 0 || block.timestamp >= erp.unlockTimestamp, "Execution timelocked");
@@ -73,7 +75,7 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
     return _call(_executeRequest);
   }
 
-  function multiPermittedExecute(ExecuteRequest[] calldata _executeRequests) external returns (bytes[] memory) {
+  function multiPermittedExecute(CallsStructs.ExecuteRequest[] calldata _executeRequests) external returns (bytes[] memory) {
     bytes[] memory results = new bytes[](_executeRequests.length);
 
     for (uint256 i = 0; i < _executeRequests.length; i++) {
@@ -82,4 +84,17 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
 
     return results;
   }
+
+  function getExecuteRequestPermission(address _executor, CallsStructs.ExecuteRequest calldata _executeRequest) private view returns (PermissionedCallsStructs.ExecuteRequestPermission storage) {
+    return PermissionedCallsStorage.layout().executeRequestPermissions[
+      keccak256(
+        abi.encode(
+          _executor,
+          _executeRequest.target,
+          _executeRequest.value,
+          _executeRequest.data
+        )
+      )
+    ];
+  } 
 }
