@@ -13,11 +13,7 @@ import "./IControllers.sol";
 import "../../utils/Signatures.sol";
 import "./ControllersStorage.sol";
 
-abstract contract Controllers is IControllers, Signatures {
-  constructor(address _controller) {
-    ControllersStorage.layout().weights[_controller] = 1;
-  }
-
+abstract contract Controllers is IControllers {
   function addControllers(
     address[] calldata _controllers, 
     uint256[] calldata _weights,
@@ -28,11 +24,13 @@ abstract contract Controllers is IControllers, Signatures {
     meetsControllersThreshold(keccak256(abi.encode(_controllers, _weights, _nonce, block.chainid)), _signatures) 
   {
     for (uint256 i = 0; i < _controllers.length; i++) {
-      address _controller = _controllers[i];
-      uint256 _weight = _weights[i];
-      ControllersStorage.layout().totalWeights += _weight;
-      ControllersStorage.layout().weights[_controller] = _weight;
+      _addController(_controllers[i], _weights[i]);
     }
+  }
+
+  function _addController(address _controller, uint256 _weight) internal {
+    ControllersStorage.layout().totalWeights += _weight;
+    ControllersStorage.layout().weights[_controller] = _weight;    
   }
 
   function removeControllers(
@@ -44,11 +42,14 @@ abstract contract Controllers is IControllers, Signatures {
     meetsControllersThreshold(keccak256(abi.encode(_controllers, _nonce, block.chainid)), _signatures)
   {
     for (uint256 i = 0; i < _controllers.length; i++) {
-      address _controller = _controllers[i];
-      ControllersStorage.layout().totalWeights -= ControllersStorage.layout().weights[_controller];
-      require(ControllersStorage.layout().totalWeights > 0 && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold, "Threshold would be impossible");
-      ControllersStorage.layout().weights[_controller] = 0;
+      _removeController(_controllers[i]);
     }
+  }
+
+  function _removeController(address _controller) internal {
+    ControllersStorage.layout().totalWeights -= ControllersStorage.layout().weights[_controller];
+    require(ControllersStorage.layout().totalWeights > 0 && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold, "Threshold would be impossible");
+    ControllersStorage.layout().weights[_controller] = 0;
   }
 
   function updateControlThreshold(
@@ -100,7 +101,7 @@ abstract contract Controllers is IControllers, Signatures {
     uint256 signerWeights = 0;
 
     for (uint256 i = 0; i < _signatures.length; i++) {
-      address signer = getSigner(_inputHash, _signatures[i]);
+      address signer = Signatures.getSigner(_inputHash, _signatures[i]);
 
       if (ControllersStorage.layout().weights[signer] == 0) {
         return (false, "At least one signature not from a known controller");

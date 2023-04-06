@@ -8,3 +8,8 @@
 // infrastructure & game APIs fast with https://trymetafab.com
 
 pragma solidity 0.8.18;
+
+interface IUpgrades {
+  function upgrade(address _implementation, uint256 _nonce, bytes[] calldata _signatures) external;
+  function supportsUpgrades() external view returns (bool);
+}

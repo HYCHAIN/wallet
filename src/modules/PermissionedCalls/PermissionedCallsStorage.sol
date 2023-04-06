@@ -12,7 +12,7 @@ pragma solidity 0.8.18;
 import "./PermissionedCallsStructs.sol";
 
 library PermissionedCallsStorage {
-  bytes32 internal constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.PermissionedCalls");
+  bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.PermissionedCalls");
 
   struct Layout {
     mapping(bytes32 => PermissionedCallsStructs.ExecuteRequestPermission) executeRequestPermissions;

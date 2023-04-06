@@ -8,3 +8,7 @@
 // infrastructure & game APIs fast with https://trymetafab.com
 
 pragma solidity 0.8.18;
+
+interface IMain {
+  function initialize(address _controller) external;
+}

@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract Signatures {
+library Signatures {
   using ECDSA for bytes32;
 
   function getSigner(bytes32 _inputHash, bytes memory _signature) internal pure returns (address) {

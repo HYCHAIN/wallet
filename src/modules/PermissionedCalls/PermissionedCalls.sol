@@ -57,7 +57,12 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
     ];
   }
 
-  function permittedExecute(CallsStructs.ExecuteRequest calldata _executeRequest) public returns (bytes memory) {
+  function permittedExecute(
+    CallsStructs.ExecuteRequest calldata _executeRequest
+  )
+    public
+    returns (bytes memory)
+  {
     PermissionedCallsStructs.ExecuteRequestPermission storage erp = getExecuteRequestPermission(msg.sender, _executeRequest);
 
     if (erp.maxExecutes == 0) { // check if permitted by any executor.
@@ -75,7 +80,12 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
     return _call(_executeRequest);
   }
 
-  function multiPermittedExecute(CallsStructs.ExecuteRequest[] calldata _executeRequests) external returns (bytes[] memory) {
+  function multiPermittedExecute(
+    CallsStructs.ExecuteRequest[] calldata _executeRequests
+  )
+    external
+    returns (bytes[] memory)
+  {
     bytes[] memory results = new bytes[](_executeRequests.length);
 
     for (uint256 i = 0; i < _executeRequests.length; i++) {
@@ -85,7 +95,14 @@ abstract contract PermissionedCalls is IPermissionedCalls, Calls {
     return results;
   }
 
-  function getExecuteRequestPermission(address _executor, CallsStructs.ExecuteRequest calldata _executeRequest) private view returns (PermissionedCallsStructs.ExecuteRequestPermission storage) {
+  function getExecuteRequestPermission(
+    address _executor,
+    CallsStructs.ExecuteRequest calldata _executeRequest
+  )
+    private
+    view
+    returns (PermissionedCallsStructs.ExecuteRequestPermission storage) 
+  {
     return PermissionedCallsStorage.layout().executeRequestPermissions[
       keccak256(
         abi.encode(
