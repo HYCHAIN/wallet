@@ -1,0 +1,15 @@
+{
+  "globals": {
+    "it": true,
+    "before": true,
+    "beforeEach": true,
+    "after": true,
+    "describe": true,
+    "chai": true,
+    "factoryContract": true,
+    "mainContract": true,
+    "walletContract": true,
+    "deployer": true,
+    "controller": true
+  },
+}
