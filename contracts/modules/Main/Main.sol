@@ -11,7 +11,7 @@ pragma solidity 0.8.18;
 
 import "../Calls/Calls.sol";
 import "../Controllers/Controllers.sol";
-import "../ERC1271.sol";
+import "../ERC1271/ERC1271.sol";
 import "../Hooks/Hooks.sol";
 import "../Upgrades/Upgrades.sol";
 import "../PermissionedCalls/PermissionedCalls.sol";

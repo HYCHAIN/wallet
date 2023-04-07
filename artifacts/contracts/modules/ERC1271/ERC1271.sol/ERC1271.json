@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "ERC1271",
-  "sourceName": "contracts/modules/ERC1271.sol",
+  "sourceName": "contracts/modules/ERC1271/ERC1271.sol",
   "abi": [
     {
       "inputs": [

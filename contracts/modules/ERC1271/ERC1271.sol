@@ -9,9 +9,9 @@
 
 pragma solidity 0.8.18;
 
-import "../interfaces/IERC1271.sol";
-import "./Controllers/Controllers.sol";
-import "../utils/Bytes.sol";
+import "./IERC1271.sol";
+import "../Controllers/Controllers.sol";
+import "../../utils/Bytes.sol";
 
 abstract contract ERC1271 is IERC1271, Controllers {
     using Bytes for bytes;

@@ -9,10 +9,11 @@
 
 pragma solidity 0.8.18;
 
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./ICalls.sol";
 import "../Controllers/Controllers.sol";
 
-contract Calls is ICalls, Controllers {
+contract Calls is ICalls, ERC165, Controllers {
   function execute( // todo: should be eip712 sigs?
     CallsStructs.ExecuteRequest calldata _executeRequest,
     bytes[] calldata _signatures
