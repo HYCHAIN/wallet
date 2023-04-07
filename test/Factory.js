@@ -28,4 +28,10 @@ describe('Factory.sol', () => {
 
     expect(await walletContract.supportsUpgrades()).to.equal(true); // see if contract returns true for simple call.
   });
+
+  it('Fails to deploy a new Wallet for an already used salt', async () => {
+    const salt = ethers.constants.HashZero;
+    const computedWalletAddress = helpers.calculateDeployWithControllerUnsignedAddress(factoryContract.address, mainContract.address, salt);
+    await expect(factoryContract.deployWithControllerUnsigned(mainContract.address, controller.address, salt)).to.be.reverted;
+  });
 });
