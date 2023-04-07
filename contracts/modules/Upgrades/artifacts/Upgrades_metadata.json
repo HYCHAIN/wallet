@@ -1,0 +1,332 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "_controllers",
+						"type": "address[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_weights",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "addControllers",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controlThreshold",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controller",
+						"type": "address"
+					}
+				],
+				"name": "controllerWeight",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controllersTotalWeight",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "_controllers",
+						"type": "address[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "removeControllers",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes4",
+						"name": "interfaceId",
+						"type": "bytes4"
+					}
+				],
+				"name": "supportsInterface",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "supportsUpgrades",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_threshold",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "updateControlThreshold",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controller",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_weight",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "updateControllerWeight",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_implementation",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "upgrade",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"supportsInterface(bytes4)": {
+					"details": "See {IERC165-supportsInterface}."
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/modules/Upgrades/Upgrades.sol": "Upgrades"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/utils/Strings.sol": {
+			"keccak256": "0xa4d1d62251f8574deb032a35fc948386a9b4de74b812d4f545a1ac120486b48a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8c969013129ba9e651a20735ef659fef6d8a1139ea3607bd4b26ddea2d645634",
+				"dweb:/ipfs/QmVhVa6LGuzAcB8qgDtVHRkucn4ihj5UZr8xBLcJkP6ucb"
+			]
+		},
+		"@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
+			"keccak256": "0xda898fa084aa1ddfdb346e6a40459e00a59d87071cce7c315a46d648dd71d0ba",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://ce501a941f4aa1555c04dabb5e07992503bb6a9b32ff8f7cdcefdb4a742210cb",
+				"dweb:/ipfs/QmeScPrUpdrGYs9BytV3Z5ZWJcBXtuAgCW4BLHua4xFUxx"
+			]
+		},
+		"@openzeppelin/contracts/utils/introspection/ERC165.sol": {
+			"keccak256": "0xd10975de010d89fd1c78dc5e8a9a7e7f496198085c151648f20cba166b32582b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fb0048dee081f6fffa5f74afc3fb328483c2a30504e94a0ddd2a5114d731ec4d",
+				"dweb:/ipfs/QmZptt1nmYoA5SgjwnSgWqgUSDgm4q52Yos3xhnMv3MV43"
+			]
+		},
+		"@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+			"keccak256": "0x447a5f3ddc18419d41ff92b3773fb86471b1db25773e07f877f548918a185bf1",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://be161e54f24e5c6fae81a12db1a8ae87bc5ae1b0ddc805d82a1440a68455088f",
+				"dweb:/ipfs/QmP7C3CHdY9urF4dEMb9wmsp1wMxHF6nhA2yQE5SKiPAdy"
+			]
+		},
+		"@openzeppelin/contracts/utils/math/Math.sol": {
+			"keccak256": "0xa1e8e83cd0087785df04ac79fb395d9f3684caeaf973d9e2c71caef723a3a5d6",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://33bbf48cc069be677705037ba7520c22b1b622c23b33e1a71495f2d36549d40b",
+				"dweb:/ipfs/Qmct36zWXv3j7LZB83uwbg7TXwnZSN1fqHNDZ93GG98bGz"
+			]
+		},
+		"contracts/modules/Controllers/Controllers.sol": {
+			"keccak256": "0x7b405a14239e91c432fc4923de08eed37c5083a7b1b53941fef5472020e43112",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://c58e495244260310d1f0984a45016bcae674840cc66d0d577f7f0480acf76cf7",
+				"dweb:/ipfs/QmaWxnpih8RrDk2JSAvwRVLACVqM1B6yBEyAePbQP7ZWbu"
+			]
+		},
+		"contracts/modules/Controllers/ControllersStorage.sol": {
+			"keccak256": "0x517caf2653cc6235cc64261b2a73664a7b6cc824f279b8a64ec731f09eb9f10b",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://81b4fc31112e2e7407dc2dc9c0da65557fbe3684f71d5047334f9a70394132c6",
+				"dweb:/ipfs/QmNS3EKzCvxAHUDPwkEpLWo2eV8GbBYoEVRTMsagC4cme2"
+			]
+		},
+		"contracts/modules/Controllers/IControllers.sol": {
+			"keccak256": "0xfbd022e7052fff69e945d4f20c180f355400b972a393e95502bb588eb54d083f",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://165a169357c6d6c6e97843cb8340c28a1aeccbe9b2bc9cec6463445b6622bb72",
+				"dweb:/ipfs/QmYNh7jkKeDiewcqoBZAKwR3o7VuJ8JyTTF4jtMxYUhpfD"
+			]
+		},
+		"contracts/modules/Upgrades/IUpgrades.sol": {
+			"keccak256": "0x9b338f4b2c0d1983e83f9eb923520e64168e1574290a2aedd296c99fa1ba733d",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://4d05928ff316fcf4c4b8a521b0d4d5e4bcc7ef6abe4ed76fb321a8689a930a53",
+				"dweb:/ipfs/QmboNUeMaQ7i4XckR7F1ECX5tjkKdJUvDy3bv7QbUFqsDt"
+			]
+		},
+		"contracts/modules/Upgrades/Upgrades.sol": {
+			"keccak256": "0xbfa40258d3d501d38d1f9b5bc444dd4378be49beedd8ca187417077c95dc58a7",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://1307855281672def14ab703ec9eb5ece805b41b1cd4889ec8de30e904c2f2b18",
+				"dweb:/ipfs/Qmbb199Po3QsRPT56mBhcy39ZjCR7iw5AyuR2KCFVd7QMR"
+			]
+		},
+		"contracts/utils/Signatures.sol": {
+			"keccak256": "0xf3f74f903db1fd3f4615742e6b96164a61874d8bb10f065a38a3fad4d28c749e",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://71919bffac27831fd5dcc119224260891f630c8b53ca6dc0dac14e2748576b3a",
+				"dweb:/ipfs/QmaY87LnPukhAVK3p56RnhSnZoyMcLvVodg9EYRBT3yXf2"
+			]
+		}
+	},
+	"version": 1
+}

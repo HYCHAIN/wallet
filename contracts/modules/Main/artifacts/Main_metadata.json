@@ -1,0 +1,942 @@
+{
+	"compiler": {
+		"version": "0.8.18+commit.87f61d96"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "_controllers",
+						"type": "address[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_weights",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "addControllers",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controlThreshold",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controller",
+						"type": "address"
+					}
+				],
+				"name": "controllerWeight",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "controllersTotalWeight",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "nonce",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct CallsStructs.ExecuteRequest",
+						"name": "_executeRequest",
+						"type": "tuple"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "execute",
+				"outputs": [
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controller",
+						"type": "address"
+					}
+				],
+				"name": "initialize",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "_hash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes",
+						"name": "_signature",
+						"type": "bytes"
+					}
+				],
+				"name": "isValidSignature",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "magicValue",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes",
+						"name": "_data",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "_signature",
+						"type": "bytes"
+					}
+				],
+				"name": "isValidSignature",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "magicValue",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "nonce",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct CallsStructs.ExecuteRequest[]",
+						"name": "_executeRequests",
+						"type": "tuple[]"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "multiExecute",
+				"outputs": [
+					{
+						"internalType": "bytes[]",
+						"name": "",
+						"type": "bytes[]"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "nonce",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct CallsStructs.ExecuteRequest[]",
+						"name": "_executeRequests",
+						"type": "tuple[]"
+					}
+				],
+				"name": "multiPermittedExecute",
+				"outputs": [
+					{
+						"internalType": "bytes[]",
+						"name": "",
+						"type": "bytes[]"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"name": "onERC1155BatchReceived",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"name": "onERC1155Received",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"name": "onERC721Received",
+				"outputs": [
+					{
+						"internalType": "bytes4",
+						"name": "",
+						"type": "bytes4"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "executor",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct PermissionedCallsStructs.ExecuteRequestPermitted",
+						"name": "_executeRequestPermitted",
+						"type": "tuple"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint64",
+								"name": "unlockTimestamp",
+								"type": "uint64"
+							},
+							{
+								"internalType": "uint64",
+								"name": "lastExecuteTimestamp",
+								"type": "uint64"
+							},
+							{
+								"internalType": "uint32",
+								"name": "minExecuteInterval",
+								"type": "uint32"
+							},
+							{
+								"internalType": "uint32",
+								"name": "executeCount",
+								"type": "uint32"
+							},
+							{
+								"internalType": "uint32",
+								"name": "maxExecutes",
+								"type": "uint32"
+							}
+						],
+						"internalType": "struct PermissionedCallsStructs.ExecuteRequestPermission",
+						"name": "_executeRequestPermission",
+						"type": "tuple"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "permitExecute",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "nonce",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct CallsStructs.ExecuteRequest",
+						"name": "_executeRequest",
+						"type": "tuple"
+					}
+				],
+				"name": "permittedExecute",
+				"outputs": [
+					{
+						"internalType": "bytes",
+						"name": "",
+						"type": "bytes"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address[]",
+						"name": "_controllers",
+						"type": "address[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "removeControllers",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bytes4",
+						"name": "_interfaceID",
+						"type": "bytes4"
+					}
+				],
+				"name": "supportsInterface",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "supportsUpgrades",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "executor",
+								"type": "address"
+							},
+							{
+								"internalType": "address",
+								"name": "target",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "value",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bytes",
+								"name": "data",
+								"type": "bytes"
+							}
+						],
+						"internalType": "struct PermissionedCallsStructs.ExecuteRequestPermitted",
+						"name": "_executeRequestPermitted",
+						"type": "tuple"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "unpermitExecute",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_threshold",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "updateControlThreshold",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_controller",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_weight",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "updateControllerWeight",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_implementation",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_nonce",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes[]",
+						"name": "_signatures",
+						"type": "bytes[]"
+					}
+				],
+				"name": "upgrade",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "version",
+				"outputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/modules/Main/Main.sol": "Main"
+		},
+		"evmVersion": "paris",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"@openzeppelin/contracts/utils/Strings.sol": {
+			"keccak256": "0xa4d1d62251f8574deb032a35fc948386a9b4de74b812d4f545a1ac120486b48a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://8c969013129ba9e651a20735ef659fef6d8a1139ea3607bd4b26ddea2d645634",
+				"dweb:/ipfs/QmVhVa6LGuzAcB8qgDtVHRkucn4ihj5UZr8xBLcJkP6ucb"
+			]
+		},
+		"@openzeppelin/contracts/utils/cryptography/ECDSA.sol": {
+			"keccak256": "0xda898fa084aa1ddfdb346e6a40459e00a59d87071cce7c315a46d648dd71d0ba",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://ce501a941f4aa1555c04dabb5e07992503bb6a9b32ff8f7cdcefdb4a742210cb",
+				"dweb:/ipfs/QmeScPrUpdrGYs9BytV3Z5ZWJcBXtuAgCW4BLHua4xFUxx"
+			]
+		},
+		"@openzeppelin/contracts/utils/introspection/ERC165.sol": {
+			"keccak256": "0xd10975de010d89fd1c78dc5e8a9a7e7f496198085c151648f20cba166b32582b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://fb0048dee081f6fffa5f74afc3fb328483c2a30504e94a0ddd2a5114d731ec4d",
+				"dweb:/ipfs/QmZptt1nmYoA5SgjwnSgWqgUSDgm4q52Yos3xhnMv3MV43"
+			]
+		},
+		"@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+			"keccak256": "0x447a5f3ddc18419d41ff92b3773fb86471b1db25773e07f877f548918a185bf1",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://be161e54f24e5c6fae81a12db1a8ae87bc5ae1b0ddc805d82a1440a68455088f",
+				"dweb:/ipfs/QmP7C3CHdY9urF4dEMb9wmsp1wMxHF6nhA2yQE5SKiPAdy"
+			]
+		},
+		"@openzeppelin/contracts/utils/math/Math.sol": {
+			"keccak256": "0xa1e8e83cd0087785df04ac79fb395d9f3684caeaf973d9e2c71caef723a3a5d6",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://33bbf48cc069be677705037ba7520c22b1b622c23b33e1a71495f2d36549d40b",
+				"dweb:/ipfs/Qmct36zWXv3j7LZB83uwbg7TXwnZSN1fqHNDZ93GG98bGz"
+			]
+		},
+		"contracts/interfaces/receivers/IERC1155Receiver.sol": {
+			"keccak256": "0x0fa3cfc77b2c53f4145d73032f856e9a85b274ba7eed6b121370bf635e999050",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://9f732d76ec86f532cf7a89035d1a3f750d330d0106a0569ba75b7cdc8a62653b",
+				"dweb:/ipfs/QmQBrf8hBvP5x8s4PYgcg29Ju153RJVbbdMkWggKnum9ZQ"
+			]
+		},
+		"contracts/interfaces/receivers/IERC223Receiver.sol": {
+			"keccak256": "0x493ce3041b45aee031a095ec29ba3b12b85253ed5a0a1b9f48a0eeea220a6f1f",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://6f2bc3a35a6ebbc71e91de3a49cd6234486446c854cb08fe77a90c9fa27a968b",
+				"dweb:/ipfs/QmaazoKDXF2VFbRdr7uAwNeRZAZP5EB2o65CFuUVGrZ4K5"
+			]
+		},
+		"contracts/interfaces/receivers/IERC721Receiver.sol": {
+			"keccak256": "0xa8db2a44002315156dfb35b56fc7c404800de3251601da1cd0c929326b1bda63",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://0060906a601e9903a7948eb363ea48621d318533b8272af322a0869f5ab0273d",
+				"dweb:/ipfs/QmWp8uENzgiaA1WxwGNCXoK7cWeWvXZeGTWQeRmLjcG4ad"
+			]
+		},
+		"contracts/modules/Calls/Calls.sol": {
+			"keccak256": "0xc5478621c58526849064aca12935f3d6db2132a5967ca8b2a3829b4e2883a675",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://67248811b738df96df728cf9f504b79d764cab864addabf560e3528580b15f85",
+				"dweb:/ipfs/QmawonnCqW1LqaiAvD4f7Kb52wD4rpn88pZdLExBjseDyB"
+			]
+		},
+		"contracts/modules/Calls/CallsStructs.sol": {
+			"keccak256": "0x2acd3796110b9e1581bcab7ff6fa437c548be24bf36812fe052c074942a8ebfb",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://838a746ee5551c20ff15a8bae8526edec3a230d8ed395ef405fee8068a2266fe",
+				"dweb:/ipfs/QmbMZw2M52sd6Qk9xc1KgmzX2tHkrwRYAQ9Mmt2Bei6Dts"
+			]
+		},
+		"contracts/modules/Calls/ICalls.sol": {
+			"keccak256": "0x6fb26b24748a7618773be82d13dee08f7fc72c9c91540484bb2859fd7674f654",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://198e37759699989015568c3c93e97bb43f5434fb22501cca309b00bf9b26d3f1",
+				"dweb:/ipfs/QmeFH7nSThS2wpx1zNEgAtknZbHV4arRV34V8NR3Rfi22Q"
+			]
+		},
+		"contracts/modules/Controllers/Controllers.sol": {
+			"keccak256": "0xb8423c29712856dc4c5c24bd838862e15e9a7433cb733553c567bd296ef7e859",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://aaf7bfbe07c63343ac7552f54470102922f79d6d443ee8969d0a467d6c2d9100",
+				"dweb:/ipfs/QmQeyj4WQzssDhxivKgo6rYMRpHY9dN5viKbtNxJgB2eJL"
+			]
+		},
+		"contracts/modules/Controllers/ControllersStorage.sol": {
+			"keccak256": "0x517caf2653cc6235cc64261b2a73664a7b6cc824f279b8a64ec731f09eb9f10b",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://81b4fc31112e2e7407dc2dc9c0da65557fbe3684f71d5047334f9a70394132c6",
+				"dweb:/ipfs/QmNS3EKzCvxAHUDPwkEpLWo2eV8GbBYoEVRTMsagC4cme2"
+			]
+		},
+		"contracts/modules/Controllers/IControllers.sol": {
+			"keccak256": "0xfbd022e7052fff69e945d4f20c180f355400b972a393e95502bb588eb54d083f",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://165a169357c6d6c6e97843cb8340c28a1aeccbe9b2bc9cec6463445b6622bb72",
+				"dweb:/ipfs/QmYNh7jkKeDiewcqoBZAKwR3o7VuJ8JyTTF4jtMxYUhpfD"
+			]
+		},
+		"contracts/modules/ERC1271/ERC1271.sol": {
+			"keccak256": "0xadd85d538cc7cb20045d9bcb49278129488eecfe73f9c27ec1ca5de97ab0e70d",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://19f87a5be582e2531c8a5380597f1927460309a2f6a88b7a6c0e6a56a986d292",
+				"dweb:/ipfs/QmbsoVpjdbAVr5Jo3JJivHMFjFsodS4viXbxbjvnw9ZvBk"
+			]
+		},
+		"contracts/modules/ERC1271/IERC1271.sol": {
+			"keccak256": "0x8ea578e62bbeb9b0a2a5df90bf96babef6f601388394a0f58c88c134b4d8656c",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://2e3c8ea9423a3fcf2ad9393bcef0bfeac6b5dce9aedd6035f839845bc6e3c8ca",
+				"dweb:/ipfs/QmbbRg4hUwdBFu1KWTytEW1sHKJnLwRunTqxrHEZqkFM2T"
+			]
+		},
+		"contracts/modules/Hooks/Hooks.sol": {
+			"keccak256": "0x9dc2149777efb5802080d05a89477869052119b8aed3ef7623b4616208f90cac",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://60326eaf009b234173bce44cf165196511a9f0f0b81381a9f523d3eb34e0611c",
+				"dweb:/ipfs/QmcBmyeAwdcLxXfeE3bYDitGvvde8KQN2PshBMJaJoRnEa"
+			]
+		},
+		"contracts/modules/Main/Main.sol": {
+			"keccak256": "0x67146a35e11add07d57f710083d1abc1111f07428ef256db7027aa07e557e26b",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://cfef0435a8115d0a4b3e3bf8ce1f1802471f245edccbf27fdcc958b268a05f4e",
+				"dweb:/ipfs/QmZVbqEypF9VE5g3hCyrp7ZN2pfToc5X8AFQXLcMXsBgRW"
+			]
+		},
+		"contracts/modules/Main/MainStorage.sol": {
+			"keccak256": "0x5d2f7638d34edea671af1e6efba4ad7f5a0443ce0db38df72e6c096bb914d7a0",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://4226256bd754cdc23b64f1b2576036f08a304b3d5949dd9e3816c0963002b6d2",
+				"dweb:/ipfs/QmeDs1paZSbtSZAjzTfHT3Z6Sp26TpUxPYRVYpHSZdaeMM"
+			]
+		},
+		"contracts/modules/PermissionedCalls/IPermissionedCalls.sol": {
+			"keccak256": "0xdfe8c32b9714c6d4892f62e97ba33a8639f3119e363eaf9e327ae528cff0ed9c",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://7ed3c4e30d31d07eed6170210d5837501a5e8c1af7653a2765106941b9f615cd",
+				"dweb:/ipfs/QmUcvt18h3J5iCcVV6UPME3PZbX1iQoSfc3Ar87fwKb6Fr"
+			]
+		},
+		"contracts/modules/PermissionedCalls/PermissionedCalls.sol": {
+			"keccak256": "0x81822ce69a03f7af9975a06f60ff26cb9a9e18862523dfabcc6d1e9d72f99cad",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://4b6c466b6f8de8a047540325af1517af69a9cc94fbcfb1e979673b8c21f32cee",
+				"dweb:/ipfs/QmW8PbqDeDZT9By2KUFxMSX5b3i1kzbpPegn8mYzRuKk8Q"
+			]
+		},
+		"contracts/modules/PermissionedCalls/PermissionedCallsStorage.sol": {
+			"keccak256": "0xd0882ee68878d3e2dff6944420afd2dee86d667ce9610ca0201d5f49b6a0648c",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://75ce5985afe6e88385d5fee61524603bb061b84e5b0459440105e9d256c18334",
+				"dweb:/ipfs/QmTor7bMUTNxpSKq71E8YfKohGY7hy8vkmY7MjpGeEsSve"
+			]
+		},
+		"contracts/modules/PermissionedCalls/PermissionedCallsStructs.sol": {
+			"keccak256": "0xe5696c57bb49be32e78f928d4d274ca49891c8951031b08da8fcd15f2c455d37",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://c2d93be8b8fb807edcb3fdd5b9cb37f69dd8ab105c72d8689bb8958484bdf199",
+				"dweb:/ipfs/Qmao5cC88rC6PEZvUKrdpehfKG7vWyLzNixh8xrxMKhekD"
+			]
+		},
+		"contracts/modules/Upgrades/IUpgrades.sol": {
+			"keccak256": "0x9b338f4b2c0d1983e83f9eb923520e64168e1574290a2aedd296c99fa1ba733d",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://4d05928ff316fcf4c4b8a521b0d4d5e4bcc7ef6abe4ed76fb321a8689a930a53",
+				"dweb:/ipfs/QmboNUeMaQ7i4XckR7F1ECX5tjkKdJUvDy3bv7QbUFqsDt"
+			]
+		},
+		"contracts/modules/Upgrades/Upgrades.sol": {
+			"keccak256": "0xbfa40258d3d501d38d1f9b5bc444dd4378be49beedd8ca187417077c95dc58a7",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://1307855281672def14ab703ec9eb5ece805b41b1cd4889ec8de30e904c2f2b18",
+				"dweb:/ipfs/Qmbb199Po3QsRPT56mBhcy39ZjCR7iw5AyuR2KCFVd7QMR"
+			]
+		},
+		"contracts/utils/Bytes.sol": {
+			"keccak256": "0x0b9ee7ccfb3d25d210a93621d60a3efd446b77afc5f1b4f374eacb73a5c39919",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://350077fa87cc9df06969814bbba8b22e6e1410d90c7325881faabbaa097643f8",
+				"dweb:/ipfs/QmZxUKtfvgSj5RNyGz2kF4rfTG6CuHxWwAhKftPogLfA6k"
+			]
+		},
+		"contracts/utils/Signatures.sol": {
+			"keccak256": "0xf3f74f903db1fd3f4615742e6b96164a61874d8bb10f065a38a3fad4d28c749e",
+			"license": "Commons-Clause-1.0",
+			"urls": [
+				"bzz-raw://71919bffac27831fd5dcc119224260891f630c8b53ca6dc0dac14e2748576b3a",
+				"dweb:/ipfs/QmaY87LnPukhAVK3p56RnhSnZoyMcLvVodg9EYRBT3yXf2"
+			]
+		}
+	},
+	"version": 1
+}
