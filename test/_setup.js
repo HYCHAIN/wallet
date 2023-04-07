@@ -23,7 +23,7 @@ beforeEach(async () => {
   mainContract = await Main.deploy();
 
   const salt = HashZero;
-  const walletAddress = helpers.calculateDeployWithControllerUnsignedAddress(factoryContract.address, mainContract.address, salt);
+  const walletAddress = helpers.calculateDeployWithControllerUnsignedAddress(deployer.address, factoryContract.address, mainContract.address, salt);
   await factoryContract.deployWithControllerUnsigned(mainContract.address, controller.address, salt);
 
   walletContract = Main.attach(walletAddress);
