@@ -9,30 +9,30 @@ import "hardhat/console.sol";
 
 contract Factory {
   bytes32 private constant PROOF_MESSAGE = keccak256("Approve wallet creation");
-  bytes32 private constant DOS_XOR_HASH = keccak256("DOS_XOR_HASH");
+  bytes32 private constant DOS_SALT_HASH = keccak256("DOS_SALT_HASH");
 
   /**
-   * @dev deployWithSignedController() is intended to allow us to support multichain smart
-   * contract wallets with consistent addresses across chains. Using a signer/signature controller
-   * approach with the salt prevents a DoS attack on other chain from signature reuse or controller
-   * swaps for a given signature used on another chain.
+   * @dev deployWithControllerSigned() is intended to allow us to support multichain smart
+   * contract wallets with guarenteed consistent addresses across chains. Using a signer/signature controller
+   * approach with the salt prevents a DoS attack on other chains from signature reuse or controller
+   * swaps for a given signature/salt.
    */
 
-  function deployWithSignedController(address _main, bytes calldata _proofSignature) external returns (address _contract) {
+  function deployWithControllerSigned(address _main, bytes calldata _proofSignature) external returns (address) {
     address signer = Signatures.getSigner(PROOF_MESSAGE, _proofSignature);
     bytes32 salt = keccak256(abi.encode(signer));
     return deploy(_main, signer, salt);
   }
 
   /**
-   * @dev deployWithUnsignedController() is intended to allow the creation of a wallet controlled
-   * by the provided controller. Created with an arbitrary salt. The provided salt is XOR'd with our
-   * DOS_XOR_HASH constant to prevent DoS of multichain support for a given controller's wallets created
-   * through deployWithSignedController().
+   * @dev deployWithControllerUnsigned() is intended to allow the creation of a wallet controlled
+   * by the provided controller. Any controller can be provided. Created with an arbitrary salt. The 
+   * provided salt is hashed with our DOS_SALT_HASH constant to prevent DoS of multichain support for a given 
+   * controller's wallets created through deployWithControllerSigned().
    */
 
-  function deployWithUnsignedController(address _main, address _controller, bytes32 _salt) external payable returns (address) {
-    bytes32 salt = _salt ^ DOS_XOR_HASH;
+  function deployWithControllerUnsigned(address _main, address _controller, bytes32 _salt) external payable returns (address) {
+    bytes32 salt = keccak256(abi.encode(_salt, DOS_SALT_HASH));
     return deploy(_main, _controller, salt);
   }
 

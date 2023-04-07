@@ -13,17 +13,17 @@ describe('Factory.sol', () => {
 
   it('Should deploy a new Wallet through factory with an arbitrary controller', async () => {
     const salt = ethers.utils.id('randsalt');
-    const walletAddress = helpers.calculateDeployWithUnsignedControllerAddress(factoryContract.address, mainContract.address, salt);
-    await factoryContract.deployWithUnsignedController(mainContract.address, controller2.address, salt);
+    const walletAddress = helpers.calculateDeployWithControllerUnsignedAddress(factoryContract.address, mainContract.address, salt);
+    await factoryContract.deployWithControllerUnsigned(mainContract.address, controller2.address, salt);
     const newWallet = await ethers.getContractAt("Wallet", walletAddress);
 
     expect(await walletContract.supportsUpgrades()).to.equal(true); // see if contract returns true for simple call.
   });
 
   it('Should deploy a new Wallet through factory with signer as controller', async () => {
-    const walletAddress = helpers.calculateDeployWithSignedControllerAddress(factoryContract.address, mainContract.address, controller);
+    const walletAddress = helpers.calculateDeployWithControllerSignedAddress(factoryContract.address, mainContract.address, controller);
     const proofSignature = helpers.generateFactoryProofSignature(controller);
-    await factoryContract.deployWithSignedController(mainContract.address, proofSignature);
+    await factoryContract.deployWithControllerSigned(mainContract.address, proofSignature);
     const newWallet = await ethers.getContractAt("Wallet", walletAddress);
 
     expect(await walletContract.supportsUpgrades()).to.equal(true); // see if contract returns true for simple call.

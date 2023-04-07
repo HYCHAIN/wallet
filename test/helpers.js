@@ -1,20 +1,20 @@
 const { ethers } = require('hardhat');
 const { BigNumber } = ethers;
-const {id, keccak256, solidityPack, getCreate2Address} = ethers.utils;
+const {id, keccak256, defaultAbiCoder, solidityPack, getCreate2Address} = ethers.utils;
 
 // See contracts/Wallet.sol 
 const factoryProofMessage = id('Approve wallet creation');
-const factoryDosXorHash = id('DOS_XOR_HASH');
+const factoryDosSaltHash = id('DOS_SALT_HASH');
 const walletProxyBytecode = '0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3';
 
-function calculateDeployWithSignedControllerAddress(factoryAddress, mainAddress, signer) {
+function calculateDeployWithControllerSignedAddress(factoryAddress, mainAddress, signer) {
   const signature = generateFactoryProofSignature(signer);
   return _calculateWalletCreate2Address(factoryAddress, keccak256(signer.address), mainAddress);
 }
 
-function calculateDeployWithUnsignedControllerAddress(factoryAddress, mainAddress, salt) {
-  const xorSalt = BigNumber.from(salt).xor(BigNumber.from(factoryDosXorHash)).toHexString();
-  return _calculateWalletCreate2Address(factoryAddress, xorSalt, mainAddress);
+function calculateDeployWithControllerUnsignedAddress(factoryAddress, mainAddress, salt) {
+  const dosSalt = keccak256(defaultAbiCoder.encode([ 'bytes32', 'bytes32' ], [ salt, factoryDosSaltHash ]));
+  return _calculateWalletCreate2Address(factoryAddress, dosSalt, mainAddress);
 }
 
 function _calculateWalletCreate2Address(factoryAddress, salt, mainAddress) {
@@ -28,7 +28,7 @@ function generateFactoryProofSignature(signer) {
 }
 
 module.exports = {
-  calculateDeployWithSignedControllerAddress,
-  calculateDeployWithUnsignedControllerAddress,
+  calculateDeployWithControllerSignedAddress,
+  calculateDeployWithControllerUnsignedAddress,
   generateFactoryProofSignature,
 };

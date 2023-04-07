@@ -1,5 +1,5 @@
 const { ethers } = require('hardhat');
-const { calculateDeployWithUnsignedControllerAddress } = require('./helpers.js');
+const { calculateDeployWithControllerUnsignedAddress } = require('./helpers.js');
 const { HashZero } = ethers.constants;
 
 global.factoryContract;
@@ -23,8 +23,8 @@ beforeEach(async () => {
   mainContract = await Main.deploy();
 
   const salt = HashZero;
-  const computedWalletAddress = calculateDeployWithUnsignedControllerAddress(factoryContract.address, mainContract.address, salt);
-  const createWalletTx = await factoryContract.deployWithUnsignedController(mainContract.address, controller.address, salt);
+  const computedWalletAddress = calculateDeployWithControllerUnsignedAddress(factoryContract.address, mainContract.address, salt);
+  const createWalletTx = await factoryContract.deployWithControllerUnsigned(mainContract.address, controller.address, salt);
 
   walletContract = Main.attach(computedWalletAddress);
 });
