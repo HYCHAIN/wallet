@@ -1,0 +1,25 @@
+[profile.default]
+src = 'contracts'
+out = '.out'
+libs = ['lib']
+optimizer = true
+optimizer_runs = 800
+
+[fuzz]
+runs = 512
+
+[rpc_endpoints]
+mainnet = "${RPC_MAINNET}"
+polygon = "${RPC_POLYGON}"
+mumbai = "${RPC_MUMBAI}"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_KEY}", chain = 1 }
+polygon = { key = "${POLYSCAN_KEY}", chain = 137 }
+mumbai = { key = "${POLYSCAN_KEY}", chain = 80001 }
+
+[doc]
+out = '.docs'
+repository = '_'
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

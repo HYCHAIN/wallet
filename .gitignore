@@ -1,3 +1,4 @@
+.vscode
 node_modules
 .env
 coverage
@@ -8,3 +9,8 @@ deploycredentials.txt
 
 #Hardhat files
 cache
+cache_hardhat
+
+#Foundry files
+.out
+broadcast/**/31337
