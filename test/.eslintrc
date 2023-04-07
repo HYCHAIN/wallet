@@ -10,6 +10,8 @@
     "mainContract": true,
     "walletContract": true,
     "deployer": true,
-    "controller": true
+    "controller": true,
+    "controller2": true,
+    "otherAddresses": true
   },
 }

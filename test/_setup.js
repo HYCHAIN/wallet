@@ -8,6 +8,7 @@ global.walletContract;
 global.deployer;
 global.controller;
 global.controller2;
+global.otherAddresses;
 
 beforeEach(async () => {
   const [ _deployer, _controller, _controller2, ..._otherAddresses ] = await ethers.getSigners();
@@ -18,6 +19,7 @@ beforeEach(async () => {
   deployer = _deployer;
   controller = _controller;
   controller2 = _controller2;
+  otherAddresses = _otherAddresses;
 
   factoryContract = await Factory.deploy();
   mainContract = await Main.deploy();
