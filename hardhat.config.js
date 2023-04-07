@@ -3,6 +3,13 @@ try {
 } catch (error) {
   console.warn('hardhat-toolbox is not installed. It is only needed for contract tests.');
 }
+try {
+  require("@nomicfoundation/hardhat-foundry");
+} catch (error) {
+  console.warn(
+    'hardhat-foundry is not installed. It is needed for compiling contracts that use Foundry '
+    + '(like tests or scripts).');
+}
 
 module.exports = {
   solidity: {
