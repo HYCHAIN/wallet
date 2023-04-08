@@ -18,11 +18,7 @@ import "../PreauthorizedCalls/PreauthorizedCalls.sol";
 import "./MainStorage.sol";
 import "./IMain.sol";
 
-<<<<<<< HEAD
-contract Main is IMain, PermissionedCalls, Hooks, Upgrades, ERC1271 {
-=======
-contract Main is PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
->>>>>>> origin/main
+contract Main is IMain, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
   string public constant version = "alpha-1.0.0";
 
   function initialize(address _controller) external {
