@@ -13,7 +13,7 @@ import "./ICalls.sol";
 import "../Controllers/Controllers.sol";
 
 contract Calls is ICalls, Controllers {
-  function singleCall(
+  function call(
     CallsStructs.CallRequest calldata _callRequest,
     bytes[] calldata _signatures
   )
