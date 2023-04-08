@@ -28,6 +28,52 @@
               "type": "bytes"
             }
           ],
+          "internalType": "struct CallsStructs.CallRequest",
+          "name": "_callRequest",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bytes[]",
+          "name": "_signatures",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "call",
+      "outputs": [
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
           "internalType": "struct CallsStructs.CallRequest[]",
           "name": "_callRequests",
           "type": "tuple[]"
@@ -203,52 +249,6 @@
           "internalType": "bytes[]",
           "name": "",
           "type": "bytes[]"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "target",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "value",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "nonce",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bytes",
-              "name": "data",
-              "type": "bytes"
-            }
-          ],
-          "internalType": "struct CallsStructs.CallRequest",
-          "name": "_callRequest",
-          "type": "tuple"
-        },
-        {
-          "internalType": "bytes[]",
-          "name": "_signatures",
-          "type": "bytes[]"
-        }
-      ],
-      "name": "singleCall",
-      "outputs": [
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
         }
       ],
       "stateMutability": "nonpayable",
