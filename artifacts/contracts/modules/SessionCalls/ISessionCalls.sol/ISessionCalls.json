@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ICalls",
-  "sourceName": "contracts/modules/Calls/ICalls.sol",
+  "contractName": "ISessionCalls",
+  "sourceName": "contracts/modules/SessionCalls/ISessionCalls.sol",
   "abi": [
     {
       "inputs": [

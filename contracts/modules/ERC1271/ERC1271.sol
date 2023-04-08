@@ -51,4 +51,12 @@ abstract contract ERC1271 is IERC1271, Controllers {
 
       return verified;
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
+      if (interfaceId == type(IERC1271).interfaceId) {
+        return true;
+      }
+
+      return super.supportsInterface(interfaceId);
+    }
 }

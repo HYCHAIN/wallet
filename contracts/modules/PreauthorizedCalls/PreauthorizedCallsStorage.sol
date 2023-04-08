@@ -9,13 +9,13 @@
 
 pragma solidity 0.8.18;
 
-import "./PermissionedCallsStructs.sol";
+import "./PreauthorizedCallsStructs.sol";
 
-library PermissionedCallsStorage {
-  bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.PermissionedCalls");
+library PreauthorizedCallsStorage {
+  bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.PreauthorizedCalls");
 
   struct Layout {
-    mapping(bytes32 => PermissionedCallsStructs.ExecuteRequestPermission) executeRequestPermissions;
+    mapping(bytes32 => PreauthorizedCallsStructs.CallRequestPreauthorization) callRequestPreauthorizations;
   }
 
   function layout() internal pure returns (Layout storage _layout) {

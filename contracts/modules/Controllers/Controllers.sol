@@ -9,11 +9,12 @@
 
 pragma solidity 0.8.18;
 
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "./IControllers.sol";
 import "../../utils/Signatures.sol";
 import "./ControllersStorage.sol";
 
-abstract contract Controllers is IControllers {
+contract Controllers is IControllers, ERC165 {
   function addControllers(
     address[] calldata _controllers, 
     uint256[] calldata _weights,
@@ -132,6 +133,14 @@ abstract contract Controllers is IControllers {
     }
 
     _;
+  }
+
+  function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+    if (interfaceId == type(IControllers).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(interfaceId);
   }
 }
 

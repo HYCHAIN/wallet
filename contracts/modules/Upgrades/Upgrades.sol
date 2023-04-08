@@ -31,4 +31,12 @@ contract Upgrades is IUpgrades, Controllers {
   function supportsUpgrades() external pure returns (bool) {
     return true;
   }
+
+  function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
+    if (interfaceId == type(IUpgrades).interfaceId) {
+      return true;
+    }
+
+    return super.supportsInterface(interfaceId);
+  }
 }

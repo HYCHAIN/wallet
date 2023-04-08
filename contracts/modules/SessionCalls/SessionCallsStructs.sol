@@ -9,16 +9,11 @@
 
 pragma solidity 0.8.18;
 
-import "./CallsStructs.sol";
-
-interface ICalls {
-  function call(
-    CallsStructs.CallRequest calldata _callRequest,
-    bytes[] calldata _signatures
-  ) external returns (bytes memory);
-
-  function multiCall(
-    CallsStructs.CallRequest[] calldata _callRequests,
-    bytes[] calldata _signatures
-  ) external returns (bytes[] memory);
+library SessionCallsStructs {
+  struct Session {
+    uint64 expiresAt;
+    bytes8[] approvedSystemIds;
+    bytes4[] approvedFunctionSelectors;
+    address[] approvedContracts;
+  }
 }

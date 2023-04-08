@@ -10,7 +10,7 @@
 pragma solidity 0.8.18;
 
 library CallsStructs {
-  struct ExecuteRequest {
+  struct CallRequest {
     address target;
     uint256 value;
     uint256 nonce;

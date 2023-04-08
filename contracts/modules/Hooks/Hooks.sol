@@ -9,7 +9,6 @@
 
 pragma solidity 0.8.18;
 
-import "../../interfaces/receivers/IERC223Receiver.sol";
 import "../../interfaces/receivers/IERC721Receiver.sol";
 import "../../interfaces/receivers/IERC1155Receiver.sol";
 

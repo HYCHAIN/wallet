@@ -9,16 +9,19 @@
 
 pragma solidity 0.8.18;
 
-import "./CallsStructs.sol";
+library PreauthorizedCallsStructs {
+  struct CallRequestPreauthorized {
+    address caller;
+    address target;
+    uint256 value;
+    bytes data;
+  }
 
-interface ICalls {
-  function call(
-    CallsStructs.CallRequest calldata _callRequest,
-    bytes[] calldata _signatures
-  ) external returns (bytes memory);
-
-  function multiCall(
-    CallsStructs.CallRequest[] calldata _callRequests,
-    bytes[] calldata _signatures
-  ) external returns (bytes[] memory);
+  struct CallRequestPreauthorization {
+    uint64 unlockTimestamp;
+    uint64 lastCallTimestamp;
+    uint32 minCallInterval;
+    uint32 callCount;
+    uint32 maxCalls;
+  }
 }

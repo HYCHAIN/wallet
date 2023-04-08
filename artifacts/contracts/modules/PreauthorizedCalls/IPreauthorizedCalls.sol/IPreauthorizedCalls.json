@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IPermissionedCalls",
-  "sourceName": "contracts/modules/PermissionedCalls/IPermissionedCalls.sol",
+  "contractName": "IPreauthorizedCalls",
+  "sourceName": "contracts/modules/PreauthorizedCalls/IPreauthorizedCalls.sol",
   "abi": [
     {
       "inputs": [
@@ -28,8 +28,8 @@
               "type": "bytes"
             }
           ],
-          "internalType": "struct CallsStructs.ExecuteRequest",
-          "name": "_executeRequest",
+          "internalType": "struct CallsStructs.CallRequest",
+          "name": "_callRequest",
           "type": "tuple"
         },
         {
@@ -38,7 +38,7 @@
           "type": "bytes[]"
         }
       ],
-      "name": "execute",
+      "name": "call",
       "outputs": [
         {
           "internalType": "bytes",
@@ -74,8 +74,8 @@
               "type": "bytes"
             }
           ],
-          "internalType": "struct CallsStructs.ExecuteRequest[]",
-          "name": "_executeRequests",
+          "internalType": "struct CallsStructs.CallRequest[]",
+          "name": "_callRequests",
           "type": "tuple[]"
         },
         {
@@ -84,7 +84,7 @@
           "type": "bytes[]"
         }
       ],
-      "name": "multiExecute",
+      "name": "multiCall",
       "outputs": [
         {
           "internalType": "bytes[]",
@@ -101,48 +101,7 @@
           "components": [
             {
               "internalType": "address",
-              "name": "target",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "value",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "nonce",
-              "type": "uint256"
-            },
-            {
-              "internalType": "bytes",
-              "name": "data",
-              "type": "bytes"
-            }
-          ],
-          "internalType": "struct CallsStructs.ExecuteRequest[]",
-          "name": "_executeRequests",
-          "type": "tuple[]"
-        }
-      ],
-      "name": "multiPermittedExecute",
-      "outputs": [
-        {
-          "internalType": "bytes[]",
-          "name": "",
-          "type": "bytes[]"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "components": [
-            {
-              "internalType": "address",
-              "name": "executor",
+              "name": "caller",
               "type": "address"
             },
             {
@@ -161,8 +120,8 @@
               "type": "bytes"
             }
           ],
-          "internalType": "struct PermissionedCallsStructs.ExecuteRequestPermitted",
-          "name": "_executeRequestPermitted",
+          "internalType": "struct PreauthorizedCallsStructs.CallRequestPreauthorized",
+          "name": "_callRequestPreauthorized",
           "type": "tuple"
         },
         {
@@ -174,27 +133,27 @@
             },
             {
               "internalType": "uint64",
-              "name": "lastExecuteTimestamp",
+              "name": "lastCallTimestamp",
               "type": "uint64"
             },
             {
               "internalType": "uint32",
-              "name": "minExecuteInterval",
+              "name": "minCallInterval",
               "type": "uint32"
             },
             {
               "internalType": "uint32",
-              "name": "executeCount",
+              "name": "callCount",
               "type": "uint32"
             },
             {
               "internalType": "uint32",
-              "name": "maxExecutes",
+              "name": "maxCalls",
               "type": "uint32"
             }
           ],
-          "internalType": "struct PermissionedCallsStructs.ExecuteRequestPermission",
-          "name": "_executeRequestPermission",
+          "internalType": "struct PreauthorizedCallsStructs.CallRequestPreauthorization",
+          "name": "_callRequestPreauthorization",
           "type": "tuple"
         },
         {
@@ -208,7 +167,7 @@
           "type": "bytes[]"
         }
       ],
-      "name": "permitExecute",
+      "name": "preauthorizeCall",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -238,12 +197,12 @@
               "type": "bytes"
             }
           ],
-          "internalType": "struct CallsStructs.ExecuteRequest",
-          "name": "_executeRequest",
+          "internalType": "struct CallsStructs.CallRequest",
+          "name": "_callRequest",
           "type": "tuple"
         }
       ],
-      "name": "permittedExecute",
+      "name": "preauthorizedCall",
       "outputs": [
         {
           "internalType": "bytes",
@@ -260,7 +219,48 @@
           "components": [
             {
               "internalType": "address",
-              "name": "executor",
+              "name": "target",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "nonce",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct CallsStructs.CallRequest[]",
+          "name": "_callRequests",
+          "type": "tuple[]"
+        }
+      ],
+      "name": "preauthorizedMultiCall",
+      "outputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "",
+          "type": "bytes[]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "caller",
               "type": "address"
             },
             {
@@ -279,8 +279,8 @@
               "type": "bytes"
             }
           ],
-          "internalType": "struct PermissionedCallsStructs.ExecuteRequestPermitted",
-          "name": "_executeRequestPermitted",
+          "internalType": "struct PreauthorizedCallsStructs.CallRequestPreauthorized",
+          "name": "_callRequestPreauthorized",
           "type": "tuple"
         },
         {
@@ -294,7 +294,7 @@
           "type": "bytes[]"
         }
       ],
-      "name": "unpermitExecute",
+      "name": "unauthorizeCall",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

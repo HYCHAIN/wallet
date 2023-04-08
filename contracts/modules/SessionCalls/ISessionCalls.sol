@@ -9,19 +9,10 @@
 
 pragma solidity 0.8.18;
 
-library PermissionedCallsStructs {
-  struct ExecuteRequestPermitted {
-    address executor;
-    address target;
-    uint256 value;
-    bytes data;
-  }
+import "../Calls/ICalls.sol";
+import "./SessionCallsStructs.sol";
 
-  struct ExecuteRequestPermission {
-    uint64 unlockTimestamp;
-    uint64 lastExecuteTimestamp;
-    uint32 minExecuteInterval;
-    uint32 executeCount;
-    uint32 maxExecutes;
-  }
+interface ISessionCalls is ICalls {
+  
 }
+
