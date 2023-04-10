@@ -1,0 +1,6 @@
+ds-test/=lib/forge-std/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+@openzeppelin/contracts/=node_modules/@openzeppelin/contracts
+hardhat/=node_modules/hardhat
+@create3-factory/=lib/create3-factory/src/
+src/=src/

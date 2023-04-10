@@ -16,8 +16,9 @@ import "../Hooks/Hooks.sol";
 import "../Upgrades/Upgrades.sol";
 import "../PreauthorizedCalls/PreauthorizedCalls.sol";
 import "./MainStorage.sol";
+import "./IMain.sol";
 
-contract Main is PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
+contract Main is IMain, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
   string public constant version = "alpha-1.0.0";
 
   function initialize(address _controller) external {
