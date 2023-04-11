@@ -9,80 +9,150 @@
 
 pragma solidity 0.8.18;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+
 import "./ISessionCalls.sol";
 import "../Calls/Calls.sol";
 import "./SessionCallsStorage.sol";
 
 contract SessionCalls is ISessionCalls, Calls {
+  bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x0;
+
+  constructor() {
+    // TODO: need to move this intended implementation to a constant.. won't work with proxy wallet
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0x39509351] = true; // ERC20: increaseAllowance(address,uint256)
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0xa457c2d7] = true; // ERC20: decreaseAllowance(address,uint256)
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0x095ea7b3] = true; // ERC20 & ERC721: approve(address,uint256)
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0xa22cb465] = true; // ERC721 & ERC1155: setApprovalForAll(address,bool)
+  }
+
+  // start session
   function startSession(
-    address caller,
-    SessionCallsStructs.Session calldata _session,
+    address _caller,
+    SessionCallsStructs.SessionRequest calldata _sessionRequest,
+    uint256 _expiresAt,
     uint256 _nonce,
     bytes[] calldata _signatures
   )
     external
-    meetsControllersThreshold(keccak256(abi.encode(caller, _session, _nonce, block.chainid)), _signatures)
+    meetsControllersThreshold(keccak256(abi.encode(_caller, _sessionRequest, _expiresAt, _nonce, block.chainid)), _signatures)
   {
-    SessionCallsStorage.layout().sessions[caller] = _session;
+    SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions
+      [_caller]
+      [SessionCallsStorage.layout().nextSessionId[_caller]];
+
+    session.expiresAt = _expiresAt;
+
+    // native token allowance
+    session.allowances[address(0)][0] = _sessionRequest.nativeAllowance;
+    
+    for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
+      for (uint256 j = 0; j < _sessionRequest.contractFunctionSelectors[i].functionSelectors.length; j++) {
+        session.contractFunctionSelectors
+          [_sessionRequest.contractFunctionSelectors[i].aContract]
+          [_sessionRequest.contractFunctionSelectors[i].functionSelectors[j]] = true;
+      }
+    }
+
+    for (uint256 i = 0; i < _sessionRequest.erc20Allowances.length; i++) {
+      session.allowances[_sessionRequest.erc20Allowances[i].erc20Contract][0] = _sessionRequest.erc20Allowances[i].allowance;
+    }
+
+    for (uint256 i = 0; i < _sessionRequest.erc721Allowances.length; i++) {
+      if (_sessionRequest.erc721Allowances[i].approveAll) {
+        session.approveAlls[_sessionRequest.erc721Allowances[i].erc721Contract] = true;
+      } else {
+        for (uint256 j = 0; j < _sessionRequest.erc721Allowances[i].tokenIds.length; j++) {
+          session.allowances
+            [_sessionRequest.erc721Allowances[i].erc721Contract]
+            [_sessionRequest.erc721Allowances[i].tokenIds[j]] = 1;
+        }
+      }
+    }
+
+    for (uint256 i = 0; i < _sessionRequest.erc1155Allowances.length; i++) {
+      if (_sessionRequest.erc1155Allowances[i].approveAll) {
+        session.approveAlls[_sessionRequest.erc1155Allowances[i].erc1155Contract] = true;
+      } else {
+        for (uint256 j = 0; j < _sessionRequest.erc1155Allowances[i].tokenIds.length; j++) {
+          session.allowances
+            [_sessionRequest.erc1155Allowances[i].erc1155Contract]
+            [_sessionRequest.erc1155Allowances[i].tokenIds[j]] = _sessionRequest.erc1155Allowances[i].allowances[j];
+        }
+      }
+    }
+
+    SessionCallsStorage.layout().nextSessionId[_caller]++;
   }
 
-  function endSession(
-    address caller,
+  // end session
+  function endSession() external {
+    endSessionForCaller(msg.sender);
+  }
+
+  function endSessionForCaller(
+    address _caller,
     uint256 _nonce,
     bytes[] calldata _signatures
   )
     external
-    meetsControllersThreshold(keccak256(abi.encode(caller, _nonce, block.chainid)), _signatures)
+    meetsControllersThreshold(keccak256(abi.encode(_caller, _nonce, block.chainid)), _signatures)
   {
-    delete SessionCallsStorage.layout().sessions[caller];
+    endSessionForCaller(_caller);
   }
 
+  function endSessionForCaller(address _caller) private {
+    require(SessionCallsStorage.layout().nextSessionId[_caller] > 0, "No sessions for sender");
+    SessionCallsStorage.layout().sessions
+      [_caller]
+      [SessionCallsStorage.layout().nextSessionId[_caller] - 1].expiresAt = 0;
+  }
+
+  // make session call
   function sessionCall(
     CallsStructs.CallRequest calldata _callRequest
   )
     public
     returns (bytes memory)
   {
-    SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions[msg.sender];
+    require(SessionCallsStorage.layout().nextSessionId[msg.sender] > 0, "No sessions for sender");
+    SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions
+      [msg.sender]
+      [SessionCallsStorage.layout().nextSessionId[msg.sender] - 1];
 
-    require(
-      session.expiresAt != 0 ||
-      session.approvedSystemIds.length > 0 ||
-      session.approvedContracts.length > 0 ||
-      session.approvedFunctionSelectors.length > 0,
-      "Session does not exist"
-    );
+    require(session.expiresAt > block.timestamp, "Session has ended or expired");
+    require(_callRequest.value < session.allowances[address(0)][0], "Value greater than allowance");
 
-    require(session.expiresAt == 0 || session.expiresAt < block.timestamp, "Session expired");
-    
-    if (session.approvedSystemIds.length > 0) {
-      // check if target implements system interface, if so check if its system id is approved
-    }
+    // check if any function is approved for the target
+    bytes4 functionSelector = bytes4(_callRequest.data);
+    bool isApproved = session.contractFunctionSelectors[_callRequest.target][functionSelector];
+         isApproved = isApproved || (
+           session.contractFunctionSelectors[_callRequest.target][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS] &&
+           !SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[functionSelector] // require explicit approval for restricted functions when default all approved
+         );    
+    require(isApproved, "Call target or function not approved for this session.");
 
-    if (session.approvedContracts.length > 0) {
-      bool approvedContract = false;
-      for (uint256 i = 0; i < session.approvedContracts.length; i++) {
-        if (session.approvedContracts[i] == _callRequest.target) {
-          approvedContract = true;
-          break;
-        }
-      }
-      require(approvedContract, "Target contract not approved for session");
-    }
 
-    if (session.approvedFunctionSelectors.length > 0) {
-      bytes4 functionSelector = bytes4(_callRequest.data);
-      bool approvedFunctionSelector = false;
-      for (uint256 i = 0; i < session.approvedFunctionSelectors.length; i++) {
-        if (session.approvedFunctionSelectors[i] == functionSelector) {
-          approvedFunctionSelector = true;
-          break;
-        }
-      }
-      require(approvedFunctionSelector, "Function selector not approved for session");
-    }
+    // TODO: Working through handling allowance tracking & deductions from standard ERC func call & non-standard for 20/721/1155...
+    // erc20
+    //uint256 balanceOf = IERC20(_callRequest.target).balanceOf(address(this));
 
-    return _call(_callRequest);
+    // maybe...
+    // native token: check address balance before & after call, compare delta to remaining allowance
+    // erc20: check address balanceOf before & after call, compare delta to remaining allowance
+    // erc721: only support allowance tracking for standard erc721 functions? Track ownership of id(s) before/after call of a standard func since we know what the id's involved are?
+    // erc1155: only support allowance tracking for standard erc1155 functions? Track balance of id(s) before/after call of a standard func since we know what the id's involved are?
+
+    bytes memory result = _call(_callRequest);
+
+    // check deductions against allowances.
+
+    // deduct from value allowance.
+    session.allowances[address(0)][0] -= _callRequest.value;
+
+    return result;
   }
 
   function sessionMultiCall(
