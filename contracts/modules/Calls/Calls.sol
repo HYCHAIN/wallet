@@ -9,10 +9,20 @@
 
 pragma solidity 0.8.18;
 
-import "./ICalls.sol";
-import "../Controllers/Controllers.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { ICalls, CallsStructs } from "./ICalls.sol";
+import { Controllers } from "../Controllers/Controllers.sol";
 
-contract Calls is ICalls, Controllers {
+abstract contract Calls is ICalls, Initializable, Controllers {
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  function __Calls_init(address _controller) internal onlyInitializing {
+    __Controllers_init(_controller);
+  }
+
   function call(
     CallsStructs.CallRequest calldata _callRequest,
     bytes[] calldata _signatures

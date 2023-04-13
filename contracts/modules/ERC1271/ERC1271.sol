@@ -47,7 +47,7 @@ abstract contract ERC1271 is IERC1271, Controllers {
         signatures[i] = _signature.slice(i * SIGNATURE_BYTES_LENGTH, SIGNATURE_BYTES_LENGTH);
       }
       
-      (bool verified, ) = verifyControllersThresholdBySignatures(_hash, signatures);
+      (bool verified, ) = _verifyControllersThresholdBySignatures(_hash, signatures);
 
       return verified;
     }

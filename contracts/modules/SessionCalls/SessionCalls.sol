@@ -9,23 +9,29 @@
 
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "./ISessionCalls.sol";
 import "../Calls/Calls.sol";
 import "./SessionCallsStorage.sol";
 
-contract SessionCalls is ISessionCalls, Calls {
+contract SessionCalls is Initializable, ISessionCalls, Calls {
   bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x0;
-
+  
   constructor() {
-    // TODO: need to move this intended implementation to a constant.. won't work with proxy wallet
-    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0x39509351] = true; // ERC20: increaseAllowance(address,uint256)
-    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0xa457c2d7] = true; // ERC20: decreaseAllowance(address,uint256)
-    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0x095ea7b3] = true; // ERC20 & ERC721: approve(address,uint256)
-    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[0xa22cb465] = true; // ERC721 & ERC1155: setApprovalForAll(address,bool)
+    _disableInitializers();
+  }
+
+  function __SessionCalls_init() internal onlyInitializing {
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.increaseAllowance.selector] = true;
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.decreaseAllowance.selector] = true;
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC20.approve.selector] = true;
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC721.approve.selector] = true;
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC721.setApprovalForAll.selector] = true;
+    SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC1155.setApprovalForAll.selector] = true;
   }
 
   // start session
@@ -89,7 +95,7 @@ contract SessionCalls is ISessionCalls, Calls {
 
   // end session
   function endSession() external {
-    endSessionForCaller(msg.sender);
+    _endSessionForCaller(msg.sender);
   }
 
   function endSessionForCaller(
@@ -100,14 +106,7 @@ contract SessionCalls is ISessionCalls, Calls {
     external
     meetsControllersThreshold(keccak256(abi.encode(_caller, _nonce, block.chainid)), _signatures)
   {
-    endSessionForCaller(_caller);
-  }
-
-  function endSessionForCaller(address _caller) private {
-    require(SessionCallsStorage.layout().nextSessionId[_caller] > 0, "No sessions for sender");
-    SessionCallsStorage.layout().sessions
-      [_caller]
-      [SessionCallsStorage.layout().nextSessionId[_caller] - 1].expiresAt = 0;
+    _endSessionForCaller(_caller);
   }
 
   // make session call
@@ -168,5 +167,12 @@ contract SessionCalls is ISessionCalls, Calls {
     }
 
     return results;
+  }
+
+  function _endSessionForCaller(address _caller) private {
+    require(SessionCallsStorage.layout().nextSessionId[_caller] > 0, "No sessions for sender");
+    SessionCallsStorage.layout().sessions
+      [_caller]
+      [SessionCallsStorage.layout().nextSessionId[_caller] - 1].expiresAt = 0;
   }
 }

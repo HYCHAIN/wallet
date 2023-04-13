@@ -13,7 +13,7 @@ library MainStorage {
   bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.Main");
 
   struct Layout {
-    bool initialized;
+    uint256 __placeholder;
   }
 
   function layout() internal pure returns (Layout storage _layout) {
