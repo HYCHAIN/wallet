@@ -9,12 +9,27 @@
 
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import "./IControllers.sol";
-import "../../utils/Signatures.sol";
-import "./ControllersStorage.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { IControllers } from "./IControllers.sol";
+import { Signatures } from "../../utils/Signatures.sol";
+import { ControllersStorage } from "./ControllersStorage.sol";
 
-contract Controllers is IControllers, ERC165 {
+abstract contract Controllers is Initializable, IControllers, ERC165 {
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  function __Controllers_init(address _controller) internal onlyInitializing {
+    _addController(_controller, 1);
+    ControllersStorage.layout().threshold = 1;
+  }
+
+  /**
+   * External Functions
+  */
+
   function addControllers(
     address[] calldata _controllers, 
     uint256[] calldata _weights,
@@ -27,11 +42,6 @@ contract Controllers is IControllers, ERC165 {
     for (uint256 i = 0; i < _controllers.length; i++) {
       _addController(_controllers[i], _weights[i]);
     }
-  }
-
-  function _addController(address _controller, uint256 _weight) internal {
-    ControllersStorage.layout().totalWeights += _weight;
-    ControllersStorage.layout().weights[_controller] = _weight;    
   }
 
   function removeControllers(
@@ -47,12 +57,6 @@ contract Controllers is IControllers, ERC165 {
     }
   }
 
-  function _removeController(address _controller) internal {
-    ControllersStorage.layout().totalWeights -= ControllersStorage.layout().weights[_controller];
-    require(ControllersStorage.layout().totalWeights > 0 && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold, "Threshold would be impossible");
-    ControllersStorage.layout().weights[_controller] = 0;
-  }
-
   function updateControlThreshold(
     uint256 _threshold,
     uint256 _nonce,
@@ -61,8 +65,8 @@ contract Controllers is IControllers, ERC165 {
     external
     meetsControllersThreshold(keccak256(abi.encode(_threshold, _nonce, block.chainid)), _signatures)
   {
-    require(ControllersStorage.layout().threshold > 0 && ControllersStorage.layout().threshold <= ControllersStorage.layout().totalWeights, "Invalid threshold");
     ControllersStorage.layout().threshold = _threshold;
+    require(ControllersStorage.layout().threshold > 0 && ControllersStorage.layout().threshold <= ControllersStorage.layout().totalWeights, "Invalid threshold");
   }
 
   function updateControllerWeight(
@@ -91,7 +95,22 @@ contract Controllers is IControllers, ERC165 {
     return ControllersStorage.layout().totalWeights;
   }
 
-  function verifyControllersThresholdBySignatures(
+  /**
+   * Internal Functions
+  */
+
+  function _addController(address _controller, uint256 _weight) internal {
+    ControllersStorage.layout().totalWeights += _weight;
+    ControllersStorage.layout().weights[_controller] = _weight;    
+  }
+
+  function _removeController(address _controller) internal {
+    ControllersStorage.layout().totalWeights -= ControllersStorage.layout().weights[_controller];
+    require(ControllersStorage.layout().totalWeights > 0 && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold, "Threshold would be impossible");
+    ControllersStorage.layout().weights[_controller] = 0;
+  }
+
+  function _verifyControllersThresholdBySignatures(
     bytes32 _inputHash, 
     bytes[] memory _signatures
   ) 
@@ -125,7 +144,8 @@ contract Controllers is IControllers, ERC165 {
   }
 
   modifier meetsControllersThreshold(bytes32 _inputHash, bytes[] calldata _signatures) {
-    (bool verified, string memory error) = verifyControllersThresholdBySignatures(_inputHash, _signatures);
+    require(ControllersStorage.layout().threshold > 0, "Controllers not initialized");
+    (bool verified, string memory error) = _verifyControllersThresholdBySignatures(_inputHash, _signatures);
     require(verified, error);
     
     for (uint256 i = 0; i < _signatures.length; i++) {

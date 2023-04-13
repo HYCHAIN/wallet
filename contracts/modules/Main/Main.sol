@@ -9,22 +9,22 @@
 
 pragma solidity 0.8.18;
 
-import "../Calls/Calls.sol";
-import "../Controllers/Controllers.sol";
-import "../ERC1271/ERC1271.sol";
-import "../Hooks/Hooks.sol";
-import "../Upgrades/Upgrades.sol";
-import "../PreauthorizedCalls/PreauthorizedCalls.sol";
-import "./MainStorage.sol";
-import "./IMain.sol";
+import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { Calls } from "../Calls/Calls.sol";
+import { Controllers } from "../Controllers/Controllers.sol";
+import { ERC1271 } from "../ERC1271/ERC1271.sol";
+import { Versioned } from "../Versioned/Versioned.sol";
+import { Hooks } from "../Hooks/Hooks.sol";
+import { Upgrades } from "../Upgrades/Upgrades.sol";
+import { PreauthorizedCalls } from "../PreauthorizedCalls/PreauthorizedCalls.sol";
+import { MainStorage } from "./MainStorage.sol";
+import { IMain } from "./IMain.sol";
 
-contract Main is IMain, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
+contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
   string public constant version = "alpha-1.0.0";
 
-  function initialize(address _controller) external {
-    require(!MainStorage.layout().initialized, "Already initialized");
-    _addController(_controller, 1);
-    MainStorage.layout().initialized = true;
+  function initialize(address _controller) external initializer {
+    __Controllers_init(_controller);
   }
 
   function supportsInterface(

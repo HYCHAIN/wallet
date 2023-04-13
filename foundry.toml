@@ -18,6 +18,10 @@ mainnet = { key = "${ETHERSCAN_KEY}", chain = 1 }
 polygon = { key = "${POLYSCAN_KEY}", chain = 137 }
 mumbai = { key = "${POLYSCAN_KEY}", chain = 80001 }
 
+[fmt]
+multiline_func_header = "params_first"
+bracket_spacing = true
+
 [doc]
 out = '.docs'
 repository = '_'
