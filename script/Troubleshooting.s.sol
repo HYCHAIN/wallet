@@ -9,10 +9,9 @@ import "forge-std/console.sol";
 //   forge script script/Troubleshooting.s.sol -f mumbai
 
 /**
- * @dev Used for running forks against the network to troubleshoot issues if needed 
+ * @dev Used for running forks against the network to troubleshoot issues if needed
  */
 contract TroubleshootingScript is Script {
-
     function run() external {
         console.log("RUNNING TROUBLESHOOTING SCRIPT");
         vm.selectFork(vm.createFork("RPC_URL"));

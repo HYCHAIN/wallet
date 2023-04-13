@@ -34,9 +34,14 @@ contract ControllersTest is TestBase {
         _controllers.initialize(signingAuthority);
     }
 
-    function _addController(address _addr) internal{
-        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(_addr), arraySingle(defaultControllerWeight), ++nonceCur, block.chainid)));
-        _controllers.addControllers(arraySingle(_addr), arraySingle(defaultControllerWeight), nonceCur, arraySingle(sig));
+    function _addController(address _addr) internal {
+        bytes memory sig = signHashAsMessage(
+            signingPK,
+            keccak256(abi.encode(arraySingle(_addr), arraySingle(defaultControllerWeight), ++nonceCur, block.chainid))
+        );
+        _controllers.addControllers(
+            arraySingle(_addr), arraySingle(defaultControllerWeight), nonceCur, arraySingle(sig)
+        );
     }
 
     function testRevertRunTxWithoutControllersOrThresholds() public {
@@ -46,7 +51,9 @@ contract ControllersTest is TestBase {
         vm.expectRevert("Controllers not initialized");
         controller.updateControlThreshold(defaultThreshold, 0, new bytes[](0));
         vm.expectRevert("Controllers not initialized");
-        controller.addControllers(arraySingle(deployer), arraySingle(defaultControllerWeight), defaultNonce, new bytes[](0));
+        controller.addControllers(
+            arraySingle(deployer), arraySingle(defaultControllerWeight), defaultNonce, new bytes[](0)
+        );
     }
 
     function testRevertRunTxWithoutControllerConsensus() public {
@@ -71,7 +78,8 @@ contract ControllersTest is TestBase {
 
     function testRevertRunTxPartialConsensus() public {
         _addController(deployer);
-        bytes memory sigThreshold = signHashAsMessage(signingPK, keccak256(abi.encode(defaultThreshold + 1, ++nonceCur, block.chainid)));
+        bytes memory sigThreshold =
+            signHashAsMessage(signingPK, keccak256(abi.encode(defaultThreshold + 1, ++nonceCur, block.chainid)));
         _controllers.updateControlThreshold(defaultThreshold + 1, nonceCur, arraySingle(sigThreshold));
         bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(block.chainid)));
 
@@ -81,7 +89,8 @@ contract ControllersTest is TestBase {
 
     function testAllowRemoveController() public {
         _addController(deployer);
-        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(deployer), defaultNonce, block.chainid)));
+        bytes memory sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(deployer), defaultNonce, block.chainid)));
 
         assertEq(1, _controllers.controllerWeight(deployer));
 
@@ -94,7 +103,8 @@ contract ControllersTest is TestBase {
         uint256 newWeight = 2;
         _addController(deployer);
         uint256 totalWeight = _controllers.controllersTotalWeight();
-        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(deployer, newWeight, defaultNonce, block.chainid)));
+        bytes memory sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(deployer, newWeight, defaultNonce, block.chainid)));
 
         assertEq(defaultControllerWeight, _controllers.controllerWeight(deployer));
 
@@ -114,21 +124,22 @@ contract ControllersTest is TestBase {
         _controllers.doSomethingWithConsensus(arraySingle(sig));
     }
 
-    function testControllerThresholdsEqualWeightsFuzz(uint _numControllers, uint _threshold) public {
+    function testControllerThresholdsEqualWeightsFuzz(uint256 _numControllers, uint256 _threshold) public {
         vm.assume(_numControllers > 0 && _numControllers <= 6);
         vm.assume(_threshold > 0 && _threshold <= _numControllers);
         uint256 pkOffset = 100;
 
-        for (uint i = 0; i < _numControllers; i++) {
+        for (uint256 i = 0; i < _numControllers; i++) {
             _addController(vm.addr(i + pkOffset));
         }
 
-        bytes memory sigThreshold = signHashAsMessage(signingPK, keccak256(abi.encode(_threshold, ++nonceCur, block.chainid)));
+        bytes memory sigThreshold =
+            signHashAsMessage(signingPK, keccak256(abi.encode(_threshold, ++nonceCur, block.chainid)));
         _controllers.updateControlThreshold(_threshold, nonceCur, arraySingle(sigThreshold));
 
         bytes[] memory sigs = new bytes[](_threshold);
 
-        for (uint i = 0; i < _threshold; i++) {
+        for (uint256 i = 0; i < _threshold; i++) {
             sigs[i] = signHashAsMessage(i + pkOffset, keccak256(abi.encode(block.chainid)));
         }
 

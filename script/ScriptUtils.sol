@@ -3,15 +3,14 @@
 pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
-import {CREATE3Factory} from "@create3-factory/CREATE3Factory.sol";
+import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 
-import {Factory} from "contracts/Factory.sol";
+import { Factory } from "contracts/Factory.sol";
 
 /**
- * @dev A quick and dirty address organizer/network helper for foundry scripts. Nothing fancy here. 
+ * @dev A quick and dirty address organizer/network helper for foundry scripts. Nothing fancy here.
  */
 contract ScriptUtils is Script {
-
     uint256 deployerPrivateKey;
     address deployer;
 
@@ -28,14 +27,13 @@ contract ScriptUtils is Script {
     Factory internal _factory = Factory(_factoryAddress);
 
     constructor() {
-        if(isPolygonMumbai()) {
+        if (isPolygonMumbai()) {
             deployerPrivateKey = vm.envUint("DEV_PRIVATE_KEY");
-        }
-        else if(isLocalhost()) {
+        } else if (isLocalhost()) {
             deployerPrivateKey = vm.envUint("ANVIL_PRIVATE_KEY");
         } else {
             console2.log("Unsupported chain for script:", block.chainid);
-            revert('unknown chain id');
+            revert("unknown chain id");
         }
         deployer = vm.addr(deployerPrivateKey);
     }

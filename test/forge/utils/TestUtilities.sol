@@ -18,7 +18,7 @@ abstract contract TestUtilities is Test {
         arr[0] = _addr;
         return arr;
     }
-    
+
     function arraySingle(uint256 _val) internal pure returns (uint256[] memory) {
         uint256[] memory arr = new uint256[](1);
         arr[0] = _val;

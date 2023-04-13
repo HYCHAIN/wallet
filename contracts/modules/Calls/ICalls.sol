@@ -12,13 +12,13 @@ pragma solidity 0.8.18;
 import "./CallsStructs.sol";
 
 interface ICalls {
-  function call(
-    CallsStructs.CallRequest calldata _callRequest,
-    bytes[] calldata _signatures
-  ) external returns (bytes memory);
+    function call(
+        CallsStructs.CallRequest calldata _callRequest,
+        bytes[] calldata _signatures
+    ) external returns (bytes memory);
 
-  function multiCall(
-    CallsStructs.CallRequest[] calldata _callRequests,
-    bytes[] calldata _signatures
-  ) external returns (bytes[] memory);
+    function multiCall(
+        CallsStructs.CallRequest[] calldata _callRequests,
+        bytes[] calldata _signatures
+    ) external returns (bytes[] memory);
 }
