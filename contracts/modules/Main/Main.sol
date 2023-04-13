@@ -21,19 +21,18 @@ import { MainStorage } from "./MainStorage.sol";
 import { IMain } from "./IMain.sol";
 
 contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
-  string public constant version = "alpha-1.0.0";
+    string public constant version = "alpha-1.0.0";
 
-  function initialize(address _controller) external initializer {
-    __Controllers_init(_controller);
-  }
+    function initialize(address _controller) external initializer {
+        __Controllers_init(_controller);
+    }
 
-  function supportsInterface(
-    bytes4 _interfaceID
-  ) public override(
-    PreauthorizedCalls,
-    Upgrades,
-    ERC1271
-  ) view returns (bool) {
-    return super.supportsInterface(_interfaceID);
-  }
+    function supportsInterface(bytes4 _interfaceID)
+        public
+        view
+        override(PreauthorizedCalls, Upgrades, ERC1271)
+        returns (bool)
+    {
+        return super.supportsInterface(_interfaceID);
+    }
 }

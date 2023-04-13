@@ -2,9 +2,9 @@
 pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
-import {CREATE3Factory} from "@create3-factory/CREATE3Factory.sol";
+import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 
-import {ScriptUtils} from "script/ScriptUtils.sol";
+import { ScriptUtils } from "script/ScriptUtils.sol";
 
 /**
  * @dev Deploys a new CREATE3Factory contract.

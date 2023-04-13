@@ -7,9 +7,7 @@ import { SessionCalls } from "contracts/modules/SessionCalls/SessionCalls.sol";
 import "forge-std/console.sol";
 
 contract SessionCallsTest is TestBase {
-
-    function setUp() public {
-    }
+    function setUp() public { }
 
     function testStartSession() public { }
 }

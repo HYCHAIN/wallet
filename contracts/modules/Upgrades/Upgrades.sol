@@ -13,30 +13,27 @@ import "./IUpgrades.sol";
 import "../Controllers/Controllers.sol";
 
 contract Upgrades is IUpgrades, Controllers {
-  function upgrade(
-    address _implementation,
-    uint256 _nonce,
-    bytes[] calldata _signatures
-  ) 
-    external
-    meetsControllersThreshold(keccak256(abi.encode(_implementation, _nonce, block.chainid)), _signatures)
-  {
-    require(IUpgrades(_implementation).supportsUpgrades(), "Invalid implementation");
-    
-    assembly {
-      sstore(address(), _implementation)
-    }
-  }
+    function upgrade(
+        address _implementation,
+        uint256 _nonce,
+        bytes[] calldata _signatures
+    ) external meetsControllersThreshold(keccak256(abi.encode(_implementation, _nonce, block.chainid)), _signatures) {
+        require(IUpgrades(_implementation).supportsUpgrades(), "Invalid implementation");
 
-  function supportsUpgrades() external pure returns (bool) {
-    return true;
-  }
-
-  function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
-    if (interfaceId == type(IUpgrades).interfaceId) {
-      return true;
+        assembly {
+            sstore(address(), _implementation)
+        }
     }
 
-    return super.supportsInterface(interfaceId);
-  }
+    function supportsUpgrades() external pure returns (bool) {
+        return true;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
+        if (interfaceId == type(IUpgrades).interfaceId) {
+            return true;
+        }
+
+        return super.supportsInterface(interfaceId);
+    }
 }

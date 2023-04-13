@@ -10,5 +10,5 @@
 pragma solidity 0.8.18;
 
 interface IMain {
-  function initialize(address _controller) external;
+    function initialize(address _controller) external;
 }

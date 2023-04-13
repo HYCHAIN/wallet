@@ -35,12 +35,8 @@ contract CallsTest is TestBase {
 
     function testCallsRequireThreshold() public {
         CallsStructs.CallRequest[] memory _callReqs = new CallsStructs.CallRequest[](1);
-        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
-            target: address(this),
-            value: 1,
-            data: new bytes(0),
-            nonce: 1
-        });
+        CallsStructs.CallRequest memory _callReq =
+            CallsStructs.CallRequest({ target: address(this), value: 1, data: new bytes(0), nonce: 1 });
         _callReqs[0] = _callReq;
 
         vm.expectRevert("Signer weights does not meet threshold");
@@ -52,12 +48,8 @@ contract CallsTest is TestBase {
 
     function testAllowTransferFundsWithConsensus() public {
         vm.deal(address(_calls), 3 ether);
-        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
-            target: leet,
-            value: 1 ether,
-            data: "",
-            nonce: 1
-        });
+        CallsStructs.CallRequest memory _callReq =
+            CallsStructs.CallRequest({ target: leet, value: 1 ether, data: "", nonce: 1 });
         assertEq(3 ether, address(_calls).balance);
         assertEq(0, leet.balance);
 
@@ -71,18 +63,17 @@ contract CallsTest is TestBase {
 
         CallsStructs.CallRequest[] memory _callReqs = new CallsStructs.CallRequest[](2);
         _callReqs[0] = _callReq;
-        _callReqs[1] = CallsStructs.CallRequest({
-            target: alice,
-            value: 0.5 ether,
-            data: "",
-            nonce: 1
-        });
+        _callReqs[1] = CallsStructs.CallRequest({ target: alice, value: 0.5 ether, data: "", nonce: 1 });
         assertEq(0, alice.balance);
 
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
 
         vm.expectRevert("At least one signature already used");
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
 
         assertEq(0.5 ether, address(_calls).balance);
         assertEq(2 ether, leet.balance);
@@ -114,10 +105,14 @@ contract CallsTest is TestBase {
             nonce: 2
         });
 
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
 
         vm.expectRevert("At least one signature already used");
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
 
         assertEq(10, _counter.count());
     }
@@ -126,29 +121,21 @@ contract CallsTest is TestBase {
         vm.deal(address(_calls), 3 ether);
 
         CallsStructs.CallRequest[] memory _callReqs = new CallsStructs.CallRequest[](3);
-        _callReqs[0] = CallsStructs.CallRequest({
-            target: leet,
-            value: 1 ether,
-            data: "",
-            nonce: 1
-        });
+        _callReqs[0] = CallsStructs.CallRequest({ target: leet, value: 1 ether, data: "", nonce: 1 });
         _callReqs[1] = CallsStructs.CallRequest({
             target: address(_counter),
             value: 0,
             data: abi.encodeWithSelector(Counter.increment.selector, 100),
             nonce: 1
         });
-        _callReqs[2] = CallsStructs.CallRequest({
-            target: alice,
-            value: 1 ether,
-            data: "",
-            nonce: 1
-        });
+        _callReqs[2] = CallsStructs.CallRequest({ target: alice, value: 1 ether, data: "", nonce: 1 });
         assertEq(3 ether, address(_calls).balance);
         assertEq(0, alice.balance);
         assertEq(0, leet.balance);
 
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
 
         assertEq(1 ether, address(_calls).balance);
         assertEq(1 ether, leet.balance);
@@ -156,6 +143,8 @@ contract CallsTest is TestBase {
         assertEq(100, _counter.count());
 
         vm.expectRevert("At least one signature already used");
-        _calls.multiCall(_callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid)))));
+        _calls.multiCall(
+            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+        );
     }
 }
