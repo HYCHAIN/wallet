@@ -25,7 +25,9 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         _disableInitializers();
     }
 
-    function __SessionCalls_init() internal onlyInitializing {
+    function __SessionCalls_init(address _controller) internal onlyInitializing {
+        __Calls_init(_controller);
+
         SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.increaseAllowance.selector] = true;
         SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.decreaseAllowance.selector] = true;
         SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC20.approve.selector] = true;
@@ -113,7 +115,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             .layout().nextSessionId[msg.sender] - 1];
 
         require(session.expiresAt > block.timestamp, "Session has ended or expired");
-        require(_callRequest.value < session.allowances[address(0)][0], "Value greater than allowance");
+        require(_callRequest.value <= session.allowances[address(0)][0], "Value greater than allowance");
 
         // check if any function is approved for the target
         bytes4 functionSelector = bytes4(_callRequest.data);
@@ -154,6 +156,18 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         }
 
         return results;
+    }
+
+    function hasActiveSession(address _caller)
+        external
+        view
+        returns (bool hasSession_)
+    {
+        if(SessionCallsStorage.layout().nextSessionId[_caller] == 0) {
+            return false;
+        }
+        SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions[_caller][SessionCallsStorage.layout().nextSessionId[_caller] - 1];
+        return session.expiresAt > block.timestamp;
     }
 
     function _endSessionForCaller(address _caller) private {

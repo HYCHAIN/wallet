@@ -26,4 +26,6 @@ interface ISessionCalls is ICalls {
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) external returns (bytes memory);
 
     function sessionMultiCall(CallsStructs.CallRequest[] calldata _callRequests) external returns (bytes[] memory);
+
+    function hasActiveSession(address _caller) external view returns (bool hasSession_);
 }
