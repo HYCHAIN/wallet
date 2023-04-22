@@ -6,8 +6,9 @@ import { TestUtilities } from "./TestUtilities.sol";
 import { TestErrors } from "./TestErrors.sol";
 import { TestLogging } from "./TestLogging.sol";
 import { TestProxyUtilities } from "./TestProxyUtilities.sol";
+import { TestSessionUtilities } from "./TestSessionUtilities.sol";
 
-abstract contract TestBase is Test, TestUtilities, TestErrors, TestLogging, TestProxyUtilities {
+abstract contract TestBase is Test, TestUtilities, TestErrors, TestLogging, TestProxyUtilities, TestSessionUtilities {
     address internal leet = address(0x1337);
     address internal alice = address(0xa11ce);
     address internal deployer = address(this);
