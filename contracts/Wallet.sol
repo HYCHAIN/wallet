@@ -40,7 +40,7 @@ pragma solidity 0.8.18;
  *     0x5b  JUMPDEST        0 rds
  *     0xf3  RETURN
  *     flattened: 0x363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3
- * 
+ *
  *     DEPLOYER
  *     ---------------------------
  *     CODE  OP              STACK
@@ -57,7 +57,7 @@ pragma solidity 0.8.18;
  *     0x3d  RETURNDATASIZE  0 0x1a
  *     0xf3  RETURN
  *     flattened: 0x603a600e3d39601a805130553df3
- * 
+ *
  *     complete: 0x603a600e3d39601a805130553df3363d3d373d3d3d363d30545af43d82803e903d91601857fd5bf3
  */
 

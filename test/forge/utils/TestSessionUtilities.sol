@@ -16,7 +16,11 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createGasSpendSessionRequest(uint amount, address sessionContract, bytes4 functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createGasSpendSessionRequest(
+        uint256 amount,
+        address sessionContract,
+        bytes4 functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         bytes4[] memory functions = new bytes4[](1);
@@ -37,11 +41,15 @@ abstract contract TestSessionUtilities is TestUtilities {
     /**
      * @dev Assumes that each contract will invoke 1 function selector
      */
-    function createGasSpendSessionRequestMulti(uint amount, address[] memory sessionContracts, bytes4[] memory functionSelectors) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createGasSpendSessionRequestMulti(
+        uint256 amount,
+        address[] memory sessionContracts,
+        bytes4[] memory functionSelectors
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         require(sessionContracts.length == functionSelectors.length, "Session contract function length mismatch");
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](sessionContracts.length);
-        for (uint i = 0; i < sessionContracts.length; i++) {    
+        for (uint256 i = 0; i < sessionContracts.length; i++) {
             bytes4[] memory functions = new bytes4[](1);
             functions[i] = functionSelectors[i];
             selectors[i] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({

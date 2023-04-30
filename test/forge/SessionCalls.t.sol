@@ -47,43 +47,22 @@ contract SessionCallsTest is TestBase {
         SessionCallsStructs.SessionRequest memory req = createEmptySessionRequest();
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _calls.startSession(
-            leet,
-            req,
-            exp,
-            nonceCur,
-            new bytes[](0)
-        );
+        _calls.startSession(leet, req, exp, nonceCur, new bytes[](0));
 
-        startSession(
-            address(_calls),
-            signingPK,
-            leet,
-            req,
-            exp,
-            ++nonceCur
-        );
+        startSession(address(_calls), signingPK, leet, req, exp, ++nonceCur);
 
         assertTrue(_calls.hasActiveSession(leet));
     }
 
     function testAllowEndingActiveSessionWithConsensus() public {
         startSession(
-            address(_calls),
-            signingPK,
-            leet,
-            createEmptySessionRequest(),
-            (block.timestamp + 1 days),
-            ++nonceCur
+            address(_calls), signingPK, leet, createEmptySessionRequest(), (block.timestamp + 1 days), ++nonceCur
         );
 
         vm.expectRevert("Signer weights does not meet threshold");
         _calls.endSessionForCaller(leet, nonceCur, new bytes[](0));
 
-        bytes memory sig = signHashAsMessage(
-            signingPK,
-            keccak256(abi.encode(leet, ++nonceCur, block.chainid))
-        );
+        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, block.chainid)));
         _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig));
 
         assertFalse(_calls.hasActiveSession(leet));
@@ -91,12 +70,7 @@ contract SessionCallsTest is TestBase {
 
     function testAllowDelegateEndSession() public {
         startSession(
-            address(_calls),
-            signingPK,
-            leet,
-            createEmptySessionRequest(),
-            (block.timestamp + 1 days),
-            ++nonceCur
+            address(_calls), signingPK, leet, createEmptySessionRequest(), (block.timestamp + 1 days), ++nonceCur
         );
 
         vm.prank(leet);
@@ -191,7 +165,7 @@ contract SessionCallsTest is TestBase {
         vm.expectRevert("Value greater than allowance");
         vm.prank(leet);
         _calls.sessionMultiCall(reqs);
-        
+
         assertEq(5 ether, address(_calls).balance);
     }
 }

@@ -10,6 +10,7 @@
 pragma solidity 0.8.18;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -118,7 +119,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         require(_callRequest.value <= session.allowances[address(0)][0], "Value greater than allowance");
 
         // check if any function is approved for the target
-        bytes4 functionSelector = bytes4(_callRequest.data);
+        (bytes4 functionSelector, bytes memory abiEncodedData) = abi.decode(_callRequest.data, (bytes4, bytes));
         bool isApproved = session.contractFunctionSelectors[_callRequest.target][functionSelector];
         isApproved = isApproved
             || (
@@ -128,19 +129,65 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
         require(isApproved, "Call target or function not approved for this session.");
 
-        // TODO: Working through handling allowance tracking & deductions from standard ERC func call & non-standard for 20/721/1155...
-        // erc20
-        //uint256 balanceOf = IERC20(_callRequest.target).balanceOf(address(this));
+        // ERC20 allowance check & deduction
+        if (IERC20(_callRequest.target).totalSupply() > 0) {
+            uint256 amount;
 
-        // maybe...
-        // native token: check address balance before & after call, compare delta to remaining allowance
-        // erc20: check address balanceOf before & after call, compare delta to remaining allowance
-        // erc721: only support allowance tracking for standard erc721 functions? Track ownership of id(s) before/after call of a standard func since we know what the id's involved are?
-        // erc1155: only support allowance tracking for standard erc1155 functions? Track balance of id(s) before/after call of a standard func since we know what the id's involved are?
+            if (
+                IERC20.transfer.selector == functionSelector ||
+                IERC20.approve.selector == functionSelector ||
+                ERC20.increaseAllowance.selector == functionSelector ||
+                ERC20.decreaseAllowance.selector == functionSelector
+            ) {
+                (, amount) = abi.decode(abiEncodedData, (address, uint256));
+            }
+
+            if (IERC20.transferFrom.selector == functionSelector) {
+                (, , amount) = abi.decode(abiEncodedData, (address, address, uint256));
+            }
+
+            require(amount <= session.allowances[_callRequest.target][0], "ERC20: Amount exceeds approval");
+            session.allowances[_callRequest.target][0] -= amount;
+        }
+
+        // ERC721 allowance check & deduction
+        if (IERC165(_callRequest.target).supportsInterface(type(IERC721).interfaceId) && !session.approveAlls[_callRequest.target]) {
+            uint256 tokenId;
+
+            if (IERC721.approve.selector == functionSelector) {
+                (, tokenId) = abi.decode(abiEncodedData, (address, uint256));
+            }
+
+            if (
+                bytes4(keccak256("safeTransferFrom(address,address,uint256)")) == functionSelector ||
+                bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes")) == functionSelector ||
+                IERC721.transferFrom.selector == functionSelector
+            ) {
+                (, , tokenId) = abi.decode(abiEncodedData, (address, address, uint256));
+            }
+
+            require(session.allowances[_callRequest.target][tokenId] == 1, "ERC721: TokenID not approved");
+            session.allowances[_callRequest.target][tokenId] = 0;
+        }
+
+        // ERC1155 allowance check & deduction
+        if (IERC165(_callRequest.target).supportsInterface(type(IERC1155).interfaceId)) { // ERC1155
+            if (IERC1155.safeTransferFrom.selector == functionSelector) {
+                (, , uint256 tokenId, uint256 amount) = abi.decode(abiEncodedData, (address, address, uint256, uint256));
+                require(session.allowances[_callRequest.target][tokenId] >= amount, "ERC1155: TokenID amount exceeds approval");
+                session.allowances[_callRequest.target][tokenId] -= amount;
+            }
+
+            if (IERC1155.safeBatchTransferFrom.selector == functionSelector) {
+                (, , uint256[] memory tokenIds, uint256[] memory amounts) = abi.decode(abiEncodedData, (address, address, uint256[], uint256[]));
+                for (uint256 i = 0; i < tokenIds.length; i++) {
+                    require(session.allowances[_callRequest.target][tokenIds[i]] >= amounts[i], "ERC1155 TokenID amount exceeds approval");
+                    session.allowances[_callRequest.target][tokenIds[i]] -= amounts[i];
+                }
+            }
+        }
 
         bytes memory result = _call(_callRequest);
-
-        // check deductions against allowances.
 
         // deduct from value allowance.
         session.allowances[address(0)][0] -= _callRequest.value;
