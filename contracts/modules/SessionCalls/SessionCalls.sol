@@ -177,7 +177,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         if (IERC165(_callRequest.target).supportsInterface(type(IERC1155).interfaceId)) { // ERC1155
             if (IERC1155.safeTransferFrom.selector == functionSelector) {
                 (, , uint256 tokenId, uint256 amount) = abi.decode(abiEncodedData, (address, address, uint256, uint256));
-                require(session.allowances[_callRequest.target][tokenId] >= amount, "ERC1155: TokenID amount exceeds approval");
+                require(amount <= session.allowances[_callRequest.target][tokenId], "ERC1155: TokenID amount exceeds approval");
                 session.allowances[_callRequest.target][tokenId] -= amount;
             }
 
