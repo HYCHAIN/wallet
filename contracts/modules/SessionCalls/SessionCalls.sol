@@ -116,7 +116,6 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             .layout().nextSessionId[msg.sender] - 1];
 
         require(session.expiresAt > block.timestamp, "Session has ended or expired");
-        require(_callRequest.value <= session.allowances[address(0)][0], "Value greater than allowance");
 
         // check if any function is approved for the target
         (bytes4 functionSelector, bytes memory abiEncodedData) = abi.decode(_callRequest.data, (bytes4, bytes));
@@ -128,6 +127,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             ); // require explicit approval for restricted functions when default all approved
 
         require(isApproved, "Call target or function not approved for this session.");
+
+        // Value allowance check & deduction
+        require(_callRequest.value <= session.allowances[address(0)][0], "Value greater than allowance");
+        session.allowances[address(0)][0] -= _callRequest.value;
 
         // ERC20 allowance check & deduction
         if (IERC20(_callRequest.target).totalSupply() > 0) {
@@ -188,9 +191,6 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         }
 
         bytes memory result = _call(_callRequest);
-
-        // deduct from value allowance.
-        session.allowances[address(0)][0] -= _callRequest.value;
 
         return result;
     }
