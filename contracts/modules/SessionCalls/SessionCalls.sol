@@ -136,12 +136,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         if (IERC20(_callRequest.target).totalSupply() > 0) {
             uint256 amount;
 
-            if (
-                IERC20.transfer.selector == functionSelector ||
-                IERC20.approve.selector == functionSelector ||
-                ERC20.increaseAllowance.selector == functionSelector ||
-                ERC20.decreaseAllowance.selector == functionSelector
-            ) {
+            if (IERC20.transfer.selector == functionSelector) {
                 (, amount) = abi.decode(abiEncodedData, (address, uint256));
             }
 
@@ -156,10 +151,6 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         // ERC721 allowance check & deduction
         if (IERC165(_callRequest.target).supportsInterface(type(IERC721).interfaceId) && !session.approveAlls[_callRequest.target]) {
             uint256 tokenId;
-
-            if (IERC721.approve.selector == functionSelector) {
-                (, tokenId) = abi.decode(abiEncodedData, (address, uint256));
-            }
 
             if (
                 bytes4(keccak256("safeTransferFrom(address,address,uint256)")) == functionSelector ||
