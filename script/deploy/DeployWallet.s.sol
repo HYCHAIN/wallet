@@ -6,7 +6,6 @@ import "forge-std/Script.sol";
 
 import { Main, IMain } from "contracts/modules/Main/Main.sol";
 import { Versioned } from "contracts/modules/Versioned/Versioned.sol";
-import { Wallet } from "contracts/Wallet.sol";
 
 import { ScriptUtils } from "script/ScriptUtils.sol";
 

@@ -5,6 +5,7 @@ import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.so
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
+import "forge-std/console.sol";
 interface IBeaconProxyFactory {
     function beacon() external view returns (address);
 }
@@ -16,9 +17,8 @@ contract FactoryCreatedBeaconProxy is BeaconProxy {
 contract BeaconProxyFactory is IBeaconProxyFactory {
     bytes32 public constant proxyHash = keccak256(type(FactoryCreatedBeaconProxy).creationCode);
 
-    error MissingBeaconImplBytecode();
     error BeaconProxyDeployFailed();
-    error BeaconImplDeployFailed();
+    error BeaconImplInvalid();
 
     /**
      * @dev Having this reference allows BeaconProxy contracts to be created without requiring the
@@ -27,18 +27,13 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
      */
     address public override beacon;
 
-    constructor(bytes memory _beaconImplBytecode) {
-        if(_beaconImplBytecode.length == 0) {
-            revert MissingBeaconImplBytecode();
-        }
-
-        address _beaconImpl = Create2.deploy(0, getSalt(msg.sender, 0x0), _beaconImplBytecode);
-
+    constructor(address _beaconImpl) {
         if(_beaconImpl == address(0)) {
-            revert BeaconImplDeployFailed();
+            revert BeaconImplInvalid();
         }
 
         beacon = address(new UpgradeableBeacon(_beaconImpl));
+        console.log(beacon);
         // Transfer ownership to the factory deployer, otherwise the factory will own the beacon.
         UpgradeableBeacon(beacon).transferOwnership(msg.sender);
     }

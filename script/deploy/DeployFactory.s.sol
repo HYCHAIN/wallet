@@ -26,7 +26,7 @@ contract FactoryDeployer is Script, ScriptUtils {
         // Main is the wallet contract with all desired features attached.
         address newFactoryAddr = _createFactory.deploy(
             _factorySalt,
-            abi.encodePacked(type(BeaconProxyFactory).creationCode, abi.encode(type(Main).creationCode))
+            abi.encodePacked(type(BeaconProxyFactory).creationCode, abi.encode(address(new Main())))
         );
 
         console2.log("Factory deployed -->", newFactoryAddr);
