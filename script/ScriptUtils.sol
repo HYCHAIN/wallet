@@ -5,7 +5,7 @@ pragma solidity 0.8.18;
 import "forge-std/Script.sol";
 import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 
-import { Factory } from "contracts/Factory.sol";
+import { BeaconProxyFactory } from "contracts/BeaconProxyFactory.sol";
 
 /**
  * @dev A quick and dirty address organizer/network helper for foundry scripts. Nothing fancy here.
@@ -24,7 +24,7 @@ contract ScriptUtils is Script {
     // generated using the _createFactory + "FactoryTestnet1" salt for 0x.... deployer
     address internal _factoryAddress = address(0); // TODO: add address when deployed
 
-    Factory internal _factory = Factory(_factoryAddress);
+    BeaconProxyFactory internal _factory = BeaconProxyFactory(_factoryAddress);
 
     constructor() {
         if (isPolygonMumbai()) {
