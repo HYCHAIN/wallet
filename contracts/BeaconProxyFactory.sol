@@ -5,7 +5,6 @@ import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.so
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
-import "forge-std/console.sol";
 interface IBeaconProxyFactory {
     function beacon() external view returns (address);
 }
@@ -33,7 +32,6 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
         }
 
         beacon = address(new UpgradeableBeacon(_beaconImpl));
-        console.log(beacon);
         // Transfer ownership to the factory deployer, otherwise the factory will own the beacon.
         UpgradeableBeacon(beacon).transferOwnership(msg.sender);
     }
