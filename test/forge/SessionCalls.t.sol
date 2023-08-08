@@ -6,6 +6,8 @@ import { SessionCallsStructs } from "contracts/modules/SessionCalls/SessionCalls
 import { CallsStructs } from "contracts/modules/Calls/CallsStructs.sol";
 import { SessionCalls } from "contracts/modules/SessionCalls/SessionCalls.sol";
 
+import { ERC20MockDecimals } from "test/forge/mocks/ERC20MockDecimals.sol";
+
 import "forge-std/console.sol";
 
 contract SessionCallsImpl is SessionCalls {
@@ -27,11 +29,18 @@ contract RandomContract {
     function spend() public payable {
         countToken += msg.value;
     }
+
+    function spendERC20(address _ercAddress, uint256 _amount) public {
+        countToken += _amount;
+        ERC20MockDecimals(_ercAddress).transferFrom(msg.sender, address(this), _amount);
+    }
 }
 
 contract SessionCallsTest is TestBase {
     SessionCallsImpl _calls;
     RandomContract _contract;
+
+    ERC20MockDecimals _erc20 = new ERC20MockDecimals(18);
 
     uint256 internal nonceCur = 0;
 
@@ -193,5 +202,82 @@ contract SessionCallsTest is TestBase {
         _calls.sessionMultiCall(reqs);
         
         assertEq(5 ether, address(_calls).balance);
+    }
+
+    function testAllowERC20SpendThroughOtherContract() public {
+        _erc20.mint(address(_calls), 10 ether);
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_erc20), ERC20MockDecimals.approve.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur
+        );
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc20),
+            value: 0,
+            data: abi.encodeWithSelector(ERC20MockDecimals.approve.selector, address(_contract), 2 ether),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+        
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_contract), RandomContract.spendERC20.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur
+        );
+
+        assertEq(10 ether, _erc20.balanceOf(address(_calls)));
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeWithSelector(RandomContract.spendERC20.selector, address(_erc20), 1 ether),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // Multiple calls in the same session should be allowed
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(8 ether, _erc20.balanceOf(address(_calls)));
+    }
+
+    function testAllowERC20Spend() public {
+        _erc20.mint(address(_calls), 10 ether);
+        
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createERC20SpendSessionRequest(address(_erc20), 1 ether, address(_erc20), ERC20MockDecimals.transfer.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur
+        );
+
+        assertEq(10 ether, _erc20.balanceOf(address(_calls)));
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc20),
+            value: 0,
+            data: abi.encodeWithSelector(ERC20MockDecimals.transfer.selector, leet, 1 ether),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        vm.prank(leet);
+        vm.expectRevert("SessionCalls: ERC20 transfer exceeds allowance");
+        _calls.sessionCall(_callReq);
+
+        assertEq(9 ether, _erc20.balanceOf(address(_calls)));
+        assertEq(1 ether, _erc20.balanceOf(leet));
     }
 }
