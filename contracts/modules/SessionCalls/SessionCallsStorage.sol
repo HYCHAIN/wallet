@@ -17,7 +17,8 @@ library SessionCallsStorage {
     struct Layout {
         mapping(address => mapping(uint256 => SessionCallsStructs.Session)) sessions;
         mapping(address => uint256) nextSessionId;
-        mapping(bytes4 => bool) RESTRICTED_FUNCTION_SELECTORS;
+        mapping(bytes4 => bool) isRestrictedFunction;
+        mapping(bytes4 => bool) isERC20TransferFunction;
     }
 
     function layout() internal pure returns (Layout storage _layout) {

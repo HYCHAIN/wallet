@@ -16,6 +16,24 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
+    function createRestrictedSessionRequest(address sessionContract, bytes4 functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+        SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
+            new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
+        bytes4[] memory functions = new bytes4[](1);
+        functions[0] = functionSelector;
+        selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
+            aContract: sessionContract,
+            functionSelectors: functions
+        });
+        return SessionCallsStructs.SessionRequest({
+            nativeAllowance: 0,
+            contractFunctionSelectors: selectors,
+            erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+            erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+            erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+        });
+    }
+
     function createGasSpendSessionRequest(uint amount, address sessionContract, bytes4 functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
@@ -29,6 +47,30 @@ abstract contract TestSessionUtilities is TestUtilities {
             nativeAllowance: amount,
             contractFunctionSelectors: selectors,
             erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+            erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+            erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+        });
+    }
+
+    function createERC20SpendSessionRequest(address ercAddress, uint amount, address sessionContract, bytes4 functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+        SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
+            new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
+        bytes4[] memory functions = new bytes4[](1);
+        functions[0] = functionSelector;
+        selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
+            aContract: sessionContract,
+            functionSelectors: functions
+        });
+        SessionCallsStructs.SessionRequest_ERC20Allowance[] memory erc20Allowances =
+            new SessionCallsStructs.SessionRequest_ERC20Allowance[](1);
+        erc20Allowances[0] = SessionCallsStructs.SessionRequest_ERC20Allowance({
+            erc20Contract: ercAddress,
+            allowance: amount
+        });
+        return SessionCallsStructs.SessionRequest({
+            nativeAllowance: 0,
+            contractFunctionSelectors: selectors,
+            erc20Allowances: erc20Allowances,
             erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
             erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
         });

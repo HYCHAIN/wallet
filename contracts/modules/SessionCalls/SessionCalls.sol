@@ -27,13 +27,17 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
     function __SessionCalls_init(address _controller) internal onlyInitializing {
         __Calls_init(_controller);
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
 
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.increaseAllowance.selector] = true;
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[ERC20.decreaseAllowance.selector] = true;
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC20.approve.selector] = true;
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC721.approve.selector] = true;
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC721.setApprovalForAll.selector] = true;
-        SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[IERC1155.setApprovalForAll.selector] = true;
+        _l.isRestrictedFunction[ERC20.increaseAllowance.selector] = true;
+        _l.isRestrictedFunction[ERC20.decreaseAllowance.selector] = true;
+        _l.isRestrictedFunction[IERC20.approve.selector] = true;
+        _l.isRestrictedFunction[IERC721.approve.selector] = true;
+        _l.isRestrictedFunction[IERC721.setApprovalForAll.selector] = true;
+        _l.isRestrictedFunction[IERC1155.setApprovalForAll.selector] = true;
+
+        _l.isERC20TransferFunction[ERC20.transfer.selector] = true;
+        _l.isERC20TransferFunction[ERC20.transferFrom.selector] = true;
     }
 
     // start session
@@ -110,8 +114,9 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
     // make session call
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) public returns (bytes memory) {
-        require(SessionCallsStorage.layout().nextSessionId[msg.sender] > 0, "No sessions for sender");
-        SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions[msg.sender][SessionCallsStorage
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
+        require(_l.nextSessionId[msg.sender] > 0, "No sessions for sender");
+        SessionCallsStructs.Session storage session = _l.sessions[msg.sender][SessionCallsStorage
             .layout().nextSessionId[msg.sender] - 1];
 
         require(session.expiresAt > block.timestamp, "Session has ended or expired");
@@ -123,26 +128,38 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         isApproved = isApproved
             || (
                 session.contractFunctionSelectors[_callRequest.target][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
-                    && !SessionCallsStorage.layout().RESTRICTED_FUNCTION_SELECTORS[functionSelector]
+                    && !_l.isRestrictedFunction[functionSelector]
             ); // require explicit approval for restricted functions when default all approved
 
         require(isApproved, "Call target or function not approved for this session.");
 
-        // TODO: Working through handling allowance tracking & deductions from standard ERC func call & non-standard for 20/721/1155...
-        // erc20
-        //uint256 balanceOf = IERC20(_callRequest.target).balanceOf(address(this));
+        bool _isERC20Transfer = _l.isERC20TransferFunction[functionSelector];
+        uint256 _startingFungibleTokenBalance = 0;
+        if(_isERC20Transfer) {
+            // Can throw exceptions if the target is incorrectly set to a non-erc20 contract.
+            _startingFungibleTokenBalance = IERC20(_callRequest.target).balanceOf(address(this));
+        }
 
+        // TODO: Working through handling allowance tracking & deductions from standard ERC func call & non-standard for 20/721/1155...
         // maybe...
-        // native token: check address balance before & after call, compare delta to remaining allowance
-        // erc20: check address balanceOf before & after call, compare delta to remaining allowance
         // erc721: only support allowance tracking for standard erc721 functions? Track ownership of id(s) before/after call of a standard func since we know what the id's involved are?
         // erc1155: only support allowance tracking for standard erc1155 functions? Track balance of id(s) before/after call of a standard func since we know what the id's involved are?
 
         bytes memory result = _call(_callRequest);
 
-        // check deductions against allowances.
+        // Check fungible token deductions against allowances if applicable.
+        if(_isERC20Transfer) {
+            uint256 _endingERC20Balance = IERC20(_callRequest.target).balanceOf(address(this));
+            // If the balance of this wallet was reduced, check that the reduction was less than
+            //  or equal to the session allowance.
+            if(_endingERC20Balance <= _startingFungibleTokenBalance) {
+                uint256 _erc20TransferAmount = _startingFungibleTokenBalance - _endingERC20Balance;
+                require(_erc20TransferAmount <= session.allowances[_callRequest.target][0], "SessionCalls: ERC20 transfer exceeds allowance");
+                session.allowances[_callRequest.target][0] -= _erc20TransferAmount;
+            }
+        }
 
-        // deduct from value allowance.
+        // Deduct any value from session allowance.
         session.allowances[address(0)][0] -= _callRequest.value;
 
         return result;
@@ -163,16 +180,18 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         view
         returns (bool hasSession_)
     {
-        if(SessionCallsStorage.layout().nextSessionId[_caller] == 0) {
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
+        if(_l.nextSessionId[_caller] == 0) {
             return false;
         }
-        SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions[_caller][SessionCallsStorage.layout().nextSessionId[_caller] - 1];
+        SessionCallsStructs.Session storage session = _l.sessions[_caller][_l.nextSessionId[_caller] - 1];
         return session.expiresAt > block.timestamp;
     }
 
     function _endSessionForCaller(address _caller) private {
-        require(SessionCallsStorage.layout().nextSessionId[_caller] > 0, "No sessions for sender");
-        SessionCallsStorage.layout().sessions[_caller][SessionCallsStorage.layout().nextSessionId[_caller] - 1]
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
+        require(_l.nextSessionId[_caller] > 0, "No sessions for sender");
+        _l.sessions[_caller][_l.nextSessionId[_caller] - 1]
             .expiresAt = 0;
     }
 }
