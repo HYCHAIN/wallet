@@ -4,7 +4,8 @@ pragma solidity 0.8.18;
 
 import "forge-std/Script.sol";
 
-import { Factory } from "contracts/Factory.sol";
+import { BeaconProxyFactory } from "contracts/BeaconProxyFactory.sol";
+import { Main } from "contracts/modules/Main/Main.sol";
 
 import { ScriptUtils } from "script/ScriptUtils.sol";
 
@@ -19,10 +20,17 @@ contract FactoryDeployer is Script, ScriptUtils {
         vm.startBroadcast(deployerPrivateKey);
         console2.log("Deploying Factory to -->", _createFactory.getDeployed(deployer, _factorySalt));
 
-        address newFactoryAddr =
-            _createFactory.deploy(_factorySalt, abi.encodePacked(type(Factory).creationCode, abi.encode(deployer)));
+        // Create a BeaconProxyFactory with the Main contract as the beacon implementation.
+        // This will cause the deployed factory to only deploy Main contracts pointing to this initial
+        // UpgradeableBeacon deployment.
+        // Main is the wallet contract with all desired features attached.
+        address newFactoryAddr = _createFactory.deploy(
+            _factorySalt,
+            abi.encodePacked(type(BeaconProxyFactory).creationCode, abi.encode(address(new Main())))
+        );
 
         console2.log("Factory deployed -->", newFactoryAddr);
+        console2.log("Factory beacon address -->", BeaconProxyFactory(newFactoryAddr).beacon());
         vm.stopBroadcast();
     }
 }

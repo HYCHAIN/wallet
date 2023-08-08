@@ -15,12 +15,11 @@ import { Controllers } from "../Controllers/Controllers.sol";
 import { ERC1271 } from "../ERC1271/ERC1271.sol";
 import { Versioned } from "../Versioned/Versioned.sol";
 import { Hooks } from "../Hooks/Hooks.sol";
-import { Upgrades } from "../Upgrades/Upgrades.sol";
 import { PreauthorizedCalls } from "../PreauthorizedCalls/PreauthorizedCalls.sol";
 import { MainStorage } from "./MainStorage.sol";
 import { IMain } from "./IMain.sol";
 
-contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, Hooks, Upgrades, ERC1271 {
+contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, Hooks, ERC1271 {
     string public constant version = "alpha-1.0.0";
 
     function initialize(address _controller) external initializer {
@@ -30,7 +29,7 @@ contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, Hooks, Upg
     function supportsInterface(bytes4 _interfaceID)
         public
         view
-        override(PreauthorizedCalls, Upgrades, ERC1271)
+        override(PreauthorizedCalls, ERC1271)
         returns (bool)
     {
         return super.supportsInterface(_interfaceID);

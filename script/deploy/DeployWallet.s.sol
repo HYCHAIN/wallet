@@ -5,8 +5,7 @@ pragma solidity 0.8.18;
 import "forge-std/Script.sol";
 
 import { Main, IMain } from "contracts/modules/Main/Main.sol";
-import { IUpgrades } from "contracts/modules/Upgrades/IUpgrades.sol";
-import { Wallet } from "contracts/Wallet.sol";
+import { Versioned } from "contracts/modules/Versioned/Versioned.sol";
 
 import { ScriptUtils } from "script/ScriptUtils.sol";
 
@@ -22,14 +21,13 @@ contract WalletDeployer is Script, ScriptUtils {
     function run() external {
         vm.startBroadcast(deployerPrivateKey);
 
-        Main _main = new Main();
-
-        address _newWalletAddr = _factory.deployWithControllerUnsigned(address(_main), deployer, _testWalletSalt);
+        address _newWalletAddr = _factory.createProxy(_testWalletSalt);
 
         console2.log("Wallet deployed -->", _newWalletAddr);
 
-        bool _supportsUpgrades = IUpgrades(_newWalletAddr).supportsUpgrades();
-        console2.log("Supports upgrades? -->", _supportsUpgrades);
+        Main(payable(_newWalletAddr)).initialize(deployer);
+        uint256 _version = Versioned(_newWalletAddr).getCurrentVersion();
+        console2.log("Current version? -->", _version);
 
         vm.stopBroadcast();
     }

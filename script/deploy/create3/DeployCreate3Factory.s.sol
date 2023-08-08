@@ -6,6 +6,9 @@ import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 
 import { ScriptUtils } from "script/ScriptUtils.sol";
 
+// example script cli:
+//   forge script script/deploy/create3/DeployCreate3Factory.s.sol --fork-url http://localhost:8545 --broadcast  
+
 /**
  * @dev Deploys a new CREATE3Factory contract.
  */
