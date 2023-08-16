@@ -21,26 +21,25 @@ import "./SessionCallsStorage.sol";
 contract SessionCalls is Initializable, ISessionCalls, Calls {
     bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x0;
 
+    /**
+     * @dev Disables initializations for any implementation contracts deployed.
+     */
     constructor() {
         _disableInitializers();
     }
 
     function __SessionCalls_init(address _controller) internal onlyInitializing {
         __Calls_init(_controller);
-        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-
-        _l.isRestrictedFunction[ERC20.increaseAllowance.selector] = true;
-        _l.isRestrictedFunction[ERC20.decreaseAllowance.selector] = true;
-        _l.isRestrictedFunction[IERC20.approve.selector] = true;
-        _l.isRestrictedFunction[IERC721.approve.selector] = true;
-        _l.isRestrictedFunction[IERC721.setApprovalForAll.selector] = true;
-        _l.isRestrictedFunction[IERC1155.setApprovalForAll.selector] = true;
-
-        _l.isERC20TransferFunction[ERC20.transfer.selector] = true;
-        _l.isERC20TransferFunction[ERC20.transferFrom.selector] = true;
     }
 
-    // start session
+    /**
+     * 
+     * @param _caller The caller to start the session for.
+     * @param _sessionRequest The request payload for the session to be started.
+     * @param _expiresAt The epoch of when the session should expire.
+     * @param _nonce The nonce of the signatures to verify against for authorization.
+     * @param _signatures The signatures of the controller(s) authorizing the session start.
+     */
     function startSession(
         address _caller,
         SessionCallsStructs.SessionRequest calldata _sessionRequest,
@@ -59,7 +58,8 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
         session.expiresAt = _expiresAt;
 
-        // native token allowance
+        // Native token allowance is stored at index 0 of address(0) in allowances mapping.
+        // See {SessionCallsStructs.Session} for more info.
         session.allowances[address(0)][0] = _sessionRequest.nativeAllowance;
 
         for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
@@ -99,11 +99,19 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         SessionCallsStorage.layout().nextSessionId[_caller]++;
     }
 
-    // end session
+    /**
+     * @dev Ends the session for the sender of this call. No authorization required, since it's "their" session to end.
+     */
     function endSession() external {
         _endSessionForCaller(msg.sender);
     }
 
+    /**
+     * @dev Ends a session for a caller. Needs sufficient controller authorization via signatures.
+     * @param _caller The caller to end the session for.
+     * @param _nonce The nonce of the signatures to verify against for authorization.
+     * @param _signatures The signatures of the controller(s) authorizing the session end.
+     */
     function endSessionForCaller(
         address _caller,
         uint256 _nonce,
@@ -112,59 +120,46 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         _endSessionForCaller(_caller);
     }
 
-    // make session call
+    /**
+     * @dev Invokes a call in a session. The caller must have an active session, the session must not be expired,
+     *  the target must be approved, and the caller must have sufficient allowance for the call if applicable.
+     * @param _callRequest The request payload for the call to be invoked.
+     */
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) public returns (bytes memory) {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        require(_l.nextSessionId[msg.sender] > 0, "No sessions for sender");
+        if(_l.nextSessionId[msg.sender] == 0) {
+            revert SessionCallsStorage.NoSessionStarted(msg.sender);
+        }
         SessionCallsStructs.Session storage session = _l.sessions[msg.sender][SessionCallsStorage
             .layout().nextSessionId[msg.sender] - 1];
 
-        require(session.expiresAt > block.timestamp, "Session has ended or expired");
-        require(_callRequest.value <= session.allowances[address(0)][0], "Value greater than allowance");
-
-        // check if any function is approved for the target
-        bytes4 functionSelector = bytes4(_callRequest.data);
-        bool isApproved = session.contractFunctionSelectors[_callRequest.target][functionSelector];
-        isApproved = isApproved
-            || (
-                session.contractFunctionSelectors[_callRequest.target][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
-                    && !_l.isRestrictedFunction[functionSelector]
-            ); // require explicit approval for restricted functions when default all approved
-
-        require(isApproved, "Call target or function not approved for this session.");
-
-        bool _isERC20Transfer = _l.isERC20TransferFunction[functionSelector];
-        uint256 _startingFungibleTokenBalance = 0;
-        if(_isERC20Transfer) {
-            // Can throw exceptions if the target is incorrectly set to a non-erc20 contract.
-            _startingFungibleTokenBalance = IERC20(_callRequest.target).balanceOf(address(this));
+        if(session.expiresAt <= block.timestamp) {
+            revert SessionCallsStorage.SessionExpired();
+        }
+        if(_callRequest.value > session.allowances[address(0)][0]) {
+            revert SessionCallsStorage.InsufficientNativeTokenAllowance(_callRequest.value, session.allowances[address(0)][0]);
         }
 
-        // TODO: Working through handling allowance tracking & deductions from standard ERC func call & non-standard for 20/721/1155...
-        // maybe...
-        // erc721: only support allowance tracking for standard erc721 functions? Track ownership of id(s) before/after call of a standard func since we know what the id's involved are?
-        // erc1155: only support allowance tracking for standard erc1155 functions? Track balance of id(s) before/after call of a standard func since we know what the id's involved are?
-
-        bytes memory result = _call(_callRequest);
-
-        // Check fungible token deductions against allowances if applicable.
-        if(_isERC20Transfer) {
-            uint256 _endingERC20Balance = IERC20(_callRequest.target).balanceOf(address(this));
-            // If the balance of this wallet was reduced, check that the reduction was less than
-            //  or equal to the session allowance.
-            if(_endingERC20Balance <= _startingFungibleTokenBalance) {
-                uint256 _erc20TransferAmount = _startingFungibleTokenBalance - _endingERC20Balance;
-                require(_erc20TransferAmount <= session.allowances[_callRequest.target][0], "SessionCalls: ERC20 transfer exceeds allowance");
-                session.allowances[_callRequest.target][0] -= _erc20TransferAmount;
-            }
+        // Check if the the given function is approved for the target in this session.
+        bytes4 _functionSelector = bytes4(_callRequest.data);
+        if(!_isFunctionApprovedForSession(session, _callRequest.target, _functionSelector)) {
+            revert SessionCallsStorage.UnauthorizedSessionCall(_callRequest.target, _functionSelector);
         }
+
+        _deductERC20AllowancesIfNeeded(session, _callRequest, _functionSelector);
+        _deductERC1155AllowancesIfNeeded(session, _callRequest, _functionSelector);
 
         // Deduct any value from session allowance.
+        // Do this before invoking the call incase the call has reentrancy that would allow the call to spend more than the allowance.
         session.allowances[address(0)][0] -= _callRequest.value;
 
-        return result;
+        return _call(_callRequest);
     }
 
+    /**
+     * @dev Invokes multiple calls in a single transaction. All must succeed for the transaction to succeed.
+     * @param _callRequests The request payload for each call to be invoked.
+     */
     function sessionMultiCall(CallsStructs.CallRequest[] calldata _callRequests) external returns (bytes[] memory) {
         bytes[] memory results = new bytes[](_callRequests.length);
 
@@ -175,6 +170,11 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         return results;
     }
 
+    /**
+     * @dev Checks if the caller has an active session and can make session calls.
+     * @param _caller The caller to check for an active session.
+     * @return hasSession_ True if the caller has an active session, false otherwise.
+     */
     function hasActiveSession(address _caller)
         external
         view
@@ -190,8 +190,98 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
     function _endSessionForCaller(address _caller) private {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        require(_l.nextSessionId[_caller] > 0, "No sessions for sender");
+        if(_l.nextSessionId[_caller] == 0) {
+            revert SessionCallsStorage.NoSessionStarted(_caller);
+        }
         _l.sessions[_caller][_l.nextSessionId[_caller] - 1]
             .expiresAt = 0;
+    }
+
+    /**
+     * @dev Checks if the function is a transfer function, and if so, verifies that there is sufficient session allowance for the transfer,
+     *  and deducts the token amount from the session allowance.
+     * @param session The session to check.
+     * @param _callRequest The request payload for the call.
+     * @param _functionSelector The function for the target contract being called.
+     */
+    function _deductERC20AllowancesIfNeeded(SessionCallsStructs.Session storage session, CallsStructs.CallRequest calldata _callRequest, bytes4 _functionSelector) private {
+        if(_functionSelector == ERC20.transfer.selector) {
+            (,uint256 _amount) = abi.decode(_callRequest.data[4:], (address, uint256));
+
+            if(session.allowances[_callRequest.target][0] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(_callRequest.target, _amount, session.allowances[_callRequest.target][0]);
+            }
+
+            session.allowances[_callRequest.target][0] -= _amount;
+        } else if(_functionSelector == ERC20.transferFrom.selector) {
+            (,,uint256 _amount) = abi.decode(_callRequest.data[4:], (address, address, uint256));
+
+            if(session.allowances[_callRequest.target][0] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(_callRequest.target, _amount, session.allowances[_callRequest.target][0]);
+            }
+
+            session.allowances[_callRequest.target][0] -= _amount;
+        }
+    }
+
+    /**
+     * @dev Checks if the function is a transfer function, and if so, verifies that there is sufficient session allowance(s) for all tokenId(s),
+     *  and deducts the token amount(s) from the session allowance(s).
+     * @param session The session to check.
+     * @param _callRequest The request payload for the call.
+     * @param _functionSelector The function for the target contract being called.
+     */
+    function _deductERC1155AllowancesIfNeeded(SessionCallsStructs.Session storage session, CallsStructs.CallRequest calldata _callRequest, bytes4 _functionSelector) private {
+        if(_functionSelector == IERC1155.safeTransferFrom.selector) {
+            (,, uint256 _tokenId, uint256 _amount,) = abi.decode(_callRequest.data[4:], (address, address, uint256, uint256, bytes));
+
+            if(session.allowances[_callRequest.target][_tokenId] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(_callRequest.target, _tokenId, _amount, session.allowances[_callRequest.target][_tokenId]);
+            }
+
+            session.allowances[_callRequest.target][_tokenId] -= _amount;
+        } else if(_functionSelector == IERC1155.safeBatchTransferFrom.selector) {
+            (,, uint256[] memory _tokenIds, uint256[] memory _amounts,) = abi.decode(_callRequest.data[4:], (address, address, uint256[], uint256[], bytes));
+
+            for (uint i = 0; i < _tokenIds.length; i++) {
+                if(session.allowances[_callRequest.target][_tokenIds[i]] < _amounts[i]) {
+                    revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(_callRequest.target, _tokenIds[i], _amounts[i], session.allowances[_callRequest.target][_tokenIds[i]]);
+                }
+
+                session.allowances[_callRequest.target][_tokenIds[i]] -= _amounts[i];
+            }
+        }
+    }
+
+    /**
+     * @dev Checks if the given function is either explicitly approved for the session, or if the session has
+     *  the MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS selector approved. If the function is a restricted function,
+     *  the MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS selector is ignored
+     * @param _session The session to check.
+     * @param _targetContract The target contract being called.
+     * @param _functionSelector The function for the target contract being called.
+     */
+    function _isFunctionApprovedForSession(SessionCallsStructs.Session storage _session, address _targetContract, bytes4 _functionSelector) private view returns(bool isApproved_) {
+        // Must have explicit approval for restricted functions even if default all approved
+        isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector]
+            || (_session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
+                && !_isRestrictedFunction(_functionSelector));
+    }
+
+    /**
+     * @dev Private function vs state storage to allow for beacon updates to be made to all instances without
+     *  needing to update state of each proxy
+     * @param _functionSelector The function selector to check.
+     */
+    function _isRestrictedFunction(bytes4 _functionSelector) private pure returns (bool isRestricted_) {
+        if(_functionSelector == ERC20.increaseAllowance.selector
+            || _functionSelector == ERC20.decreaseAllowance.selector
+            || _functionSelector == IERC20.approve.selector
+            || _functionSelector == IERC721.approve.selector
+            || _functionSelector == IERC721.setApprovalForAll.selector
+            || _functionSelector == IERC1155.setApprovalForAll.selector)
+        {
+            isRestricted_ = true;
+        }
     }
 }
