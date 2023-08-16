@@ -124,6 +124,29 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
+    function createERC721TransferSessionRequest(address _ercAddress, uint256 _tokenId, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+        SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
+            new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
+        selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
+            aContract: _sessionContract,
+            functionSelectors: asSingletonArray(_functionSelector)
+        });
+        SessionCallsStructs.SessionRequest_ERC721Allowance[] memory erc721Allowances =
+            new SessionCallsStructs.SessionRequest_ERC721Allowance[](1);
+        erc721Allowances[0] = SessionCallsStructs.SessionRequest_ERC721Allowance({
+            erc721Contract: _ercAddress,
+            approveAll: false,
+            tokenIds: asSingletonArray(_tokenId)
+        });
+        return SessionCallsStructs.SessionRequest({
+            nativeAllowance: 0,
+            contractFunctionSelectors: selectors,
+            erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+            erc721Allowances: erc721Allowances,
+            erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+        });
+    }
+
     /**
      * @dev Assumes that each contract will invoke 1 function selector
      */

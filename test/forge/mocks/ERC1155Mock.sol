@@ -9,9 +9,12 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract ERC1155Mock is ERC1155 {
     constructor() ERC1155("www.example.come") { }
 
-    /// @dev Mint _amount to _to.
-    /// @param _to The address that will receive the mint
-    /// @param _amount The amount to be minted
+    /**
+     * @dev Mint _amount of the _tokenId to _to.
+     * @param _to The address that will receive the mint
+     * @param _tokenId The tokenId to be minted
+     * @param _amount The amount to be minted
+     */
     function mint(address _to, uint256 _tokenId, uint256 _amount) external {
         _mint(_to, _tokenId, _amount, "");
     }
