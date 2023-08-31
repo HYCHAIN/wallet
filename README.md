@@ -82,3 +82,8 @@ The `Calls.sol` contract provides the basic functionality for making calls to ot
 #### BeaconProxyFactory.sol
 
 The `BeaconProxyFactory.sol` contract is used to create new instances of the HYTOPIA Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
+
+### Authors
+
+- [T1Dev](https://twitter.com/pr0zy)
+- [ArkDev](https://twitter.com/iamarkdev)
