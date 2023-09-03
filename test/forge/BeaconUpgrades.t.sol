@@ -37,6 +37,12 @@ contract BeaconUpgradesTest is TestBase {
         _beacon = UpgradeableBeacon(_factory.beacon());
     }
 
+    function testCreateBySignatureInitializesSigner() public {
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        address _newWallet = _factory.createProxyFromSignature(sig);
+        assertEq(1, Main(payable(_newWallet)).controllerWeight(signingAuthority));
+    }
+
     function testChangeBeaconUpdatesSingleProxy() public {
         assertFalse(_wallet1.isNew());
         MainImplNew _newImpl = new MainImplNew();
