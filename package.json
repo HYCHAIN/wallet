@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "forge build && forge test",
-    "postinstall": "git submodule update --init && npx hardhat compile"
+    "postinstall": "git submodule update --init && forge buld && npx hardhat compile"
   },
   "repository": {
     "type": "git",
