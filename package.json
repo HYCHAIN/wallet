@@ -1,10 +1,10 @@
 {
   "name": "hytopia-wallet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test",
+    "test": "forge build && forge test",
     "postinstall": "npx hardhat compile"
   },
   "repository": {
