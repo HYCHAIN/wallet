@@ -30,4 +30,7 @@ const recurseContracts = rootDirectory => {
 recurseContracts(path.join(__dirname, './artifacts/contracts'));
 recurseContracts(path.join(__dirname, './artifacts/@openzeppelin'));
 
+// add precompiled contracts
+contracts.CREATE3Factory = require('./precompiled/CREATE3Factory.json');
+
 module.exports = contracts;
