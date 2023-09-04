@@ -8,8 +8,8 @@ To initialize the repository, build the contracts, and run the forge tests, foll
 
 ### Initializing the Repository
 
-1. Clone the repository: `git clone https://github.com/Hytopia/Hytopia-Smart-Contract-Wallet.git`
-2. Navigate into the cloned repository: `cd Hytopia-Smart-Contract-Wallet`
+1. Clone the repository: `git clone https://github.com/hytopia-game/wallet`
+2. Navigate into the cloned repository: `cd wallet`
 3. Install the necessary dependencies: `npm install`
 
 ### Building the Contracts
