@@ -29,6 +29,8 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
     bytes32 public constant proxyHash = keccak256(type(FactoryCreatedBeaconProxy).creationCode);
     bytes32 private constant PROOF_MESSAGE = keccak256("Approve HYTOPIA wallet creation");
 
+    event ContractDeployed(address indexed contractAddress, bool indexed wasSigned);
+
     error BeaconProxyDeployFailed();
     error BeaconImplInvalid();
 
@@ -55,6 +57,8 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
      */
     function createProxy(bytes32 _userSalt) external returns (address createdContract_) {
         createdContract_ = _create(getSalt(msg.sender, _userSalt));
+
+        emit ContractDeployed(createdContract_, false);
     }
 
     /**
@@ -68,6 +72,8 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
         createdContract_ = _create(_salt);
 
         IMain(createdContract_).initialize(_signer);
+
+        emit ContractDeployed(createdContract_, true);
     }
 
     /**
