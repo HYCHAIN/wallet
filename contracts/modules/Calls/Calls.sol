@@ -7,7 +7,6 @@
 //
 // https://hytopia.com
 //
-
 pragma solidity 0.8.18;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -55,6 +54,11 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         (bool success, bytes memory result) = _callRequest.target.call{ value: _callRequest.value }(_callRequest.data);
 
         if (!success) {
+            if (result.length == 0) {
+                if (_callRequest.value > 0 && address(this).balance > _callRequest.value) {
+                    revert("Insufficient funds to transfer");
+                }
+            }
             assembly {
                 revert(add(result, 32), mload(result))
             }
