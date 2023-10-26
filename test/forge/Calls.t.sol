@@ -46,6 +46,16 @@ contract CallsTest is TestBase {
         _calls.multiCall(_callReqs, new bytes[](0));
     }
 
+    function testRevertTransferInsufficientFundsWithConsensus() public {
+        CallsStructs.CallRequest memory _callReq =
+            CallsStructs.CallRequest({ target: leet, value: 1 ether, data: "", nonce: 1 });
+        assertEq(0, address(_calls).balance);
+        assertEq(0, leet.balance);
+
+        vm.expectRevert();
+        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+    }
+
     function testAllowTransferFundsWithConsensus() public {
         vm.deal(address(_calls), 3 ether);
         CallsStructs.CallRequest memory _callReq =
