@@ -52,7 +52,7 @@ contract CallsTest is TestBase {
         assertEq(0, address(_calls).balance);
         assertEq(0, leet.balance);
 
-        vm.expectRevert();
+        vm.expectRevert("Insufficient funds to transfer");
         _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
     }
 

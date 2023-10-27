@@ -42,7 +42,7 @@ contract MainTest is TestBase {
         assertEq(0, address(_wallet1).balance);
         assertEq(0, leet.balance);
 
-        vm.expectRevert();
+        vm.expectRevert("Insufficient funds to transfer");
         _wallet1.call(
             _callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid))))
         );

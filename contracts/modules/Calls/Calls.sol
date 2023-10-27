@@ -55,7 +55,7 @@ abstract contract Calls is ICalls, Initializable, Controllers {
 
         if (!success) {
             if (result.length == 0) {
-                if (_callRequest.value > 0 && address(this).balance > _callRequest.value) {
+                if (_callRequest.value > 0 && _callRequest.value > address(this).balance) {
                     revert("Insufficient funds to transfer");
                 }
             }
