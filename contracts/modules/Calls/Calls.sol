@@ -58,6 +58,7 @@ abstract contract Calls is ICalls, Initializable, Controllers {
                 if (_callRequest.value > 0 && _callRequest.value > address(this).balance) {
                     revert("Insufficient funds to transfer");
                 }
+                revert("Call reverted without message");
             }
             assembly {
                 revert(add(result, 32), mload(result))
