@@ -29,27 +29,27 @@ contract NonexistingFunctionCallingTests is TestBase {
         erc20 = new ERC20Mock("Testing", "TST");
         _counter = new Counter();
     }
-    
+
     function testCallingNonERC20ContractReverts() public {
         vm.expectRevert();
         IERC20(address(_counter)).totalSupply();
 
-        try IERC20(address(_counter)).totalSupply() returns(uint256) {
+        try IERC20(address(_counter)).totalSupply() returns (uint256) {
             fail("Expected revert got value instead");
         } catch { }
     }
-    
+
     function testCallingNonERC20EOAReverts() public {
         // Cannot call the following directly because forge doesn't propagate the revert correctly.
         // If you use vm.expectRevert it 'doesn't revert', however if you remove it it reverts.
         // uint256 supp = IERC20(alice).totalSupply();
 
         vm.expectRevert();
-        try IERC20(alice).totalSupply() returns(uint256) {
+        try IERC20(alice).totalSupply() returns (uint256) {
             fail("Expected revert got value instead");
         } catch { }
     }
-    
+
     function testCallingNonERC20EOALowLevelSucceeds() public {
         (bool success,) = alice.call(abi.encodeWithSelector(IERC20.totalSupply.selector));
         assertTrue(success);

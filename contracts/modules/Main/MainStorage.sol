@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 library MainStorage {
     bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.Main");

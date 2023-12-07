@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 interface IERC1155Receiver {
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external returns (bytes4);

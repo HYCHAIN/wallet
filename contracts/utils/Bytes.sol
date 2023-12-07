@@ -8,7 +8,7 @@
 // https://hytopia.com
 //
 // https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 library Bytes {
     function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {

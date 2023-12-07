@@ -35,11 +35,7 @@ contract ERC20MockDecimals is ERC20 {
         return super.transfer(_to, _amount);
     }
 
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) public override returns (bool) {
+    function transferFrom(address _from, address _to, uint256 _amount) public override returns (bool) {
         return super.transferFrom(_from, _to, _amount);
     }
 }

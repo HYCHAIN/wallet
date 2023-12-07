@@ -7,7 +7,7 @@
 //
 // https://hytopia.com
 //
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
@@ -22,7 +22,7 @@ interface IBeaconProxyFactory {
 }
 
 contract FactoryCreatedBeaconProxy is BeaconProxy {
-    constructor() BeaconProxy(IBeaconProxyFactory(msg.sender).beacon(), "") {}
+    constructor() BeaconProxy(IBeaconProxyFactory(msg.sender).beacon(), "") { }
 }
 
 contract BeaconProxyFactory is IBeaconProxyFactory {
@@ -42,13 +42,11 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
     address public override beacon;
 
     constructor(address _beaconImpl) {
-        if(_beaconImpl == address(0)) {
+        if (_beaconImpl == address(0)) {
             revert BeaconImplInvalid();
         }
 
-        beacon = address(new UpgradeableBeacon(_beaconImpl));
-        // Transfer ownership to the factory deployer, otherwise the factory will own the beacon.
-        UpgradeableBeacon(beacon).transferOwnership(msg.sender);
+        beacon = address(new UpgradeableBeacon(_beaconImpl, msg.sender));
     }
 
     /**
@@ -86,22 +84,17 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
     /**
      * @dev Calculates the expected address of a BeaconProxy contract based on the salt provided without combining an address.
      */
-    function calculateExpectedAddress(bytes32 _salt)
-        public
-        view
-        returns (address expectedAddress_)
-    {
+    function calculateExpectedAddress(bytes32 _salt) public view returns (address expectedAddress_) {
         expectedAddress_ = Create2.computeAddress(_salt, proxyHash, address(this));
     }
 
     /**
      * @dev Calculates the expected address of a BeaconProxy contract based on the salt provided and a given address.
      */
-    function calculateExpectedAddress(address _user, bytes32 _userSalt)
-        public
-        view
-        returns (address expectedAddress_)
-    {
+    function calculateExpectedAddress(
+        address _user,
+        bytes32 _userSalt
+    ) public view returns (address expectedAddress_) {
         expectedAddress_ = calculateExpectedAddress(getSalt(_user, _userSalt));
     }
 
@@ -112,7 +105,7 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
     function _create(bytes32 _salt) internal returns (address createdContract_) {
         createdContract_ = address(new FactoryCreatedBeaconProxy{ salt: _salt }());
         // If the beacon proxy fails to deploy, it will return address(0)
-        if(createdContract_ == address(0)) {
+        if (createdContract_ == address(0)) {
             revert BeaconProxyDeployFailed();
         }
     }

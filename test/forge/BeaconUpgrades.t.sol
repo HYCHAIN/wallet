@@ -11,13 +11,13 @@ import { Main, IMain } from "contracts/modules/Main/Main.sol";
 import "forge-std/console.sol";
 
 contract MainImpl is Main {
-    function isNew() public pure returns(bool) {
+    function isNew() public pure returns (bool) {
         return false;
     }
 }
 
 contract MainImplNew is Main {
-    function isNew() public pure returns(bool) {
+    function isNew() public pure returns (bool) {
         return true;
     }
 }

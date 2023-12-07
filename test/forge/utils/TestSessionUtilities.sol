@@ -16,7 +16,10 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createRestrictedSessionRequest(address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createRestrictedSessionRequest(
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         bytes4[] memory functions = new bytes4[](1);
@@ -34,7 +37,11 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createGasSpendSessionRequest(uint _amount, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createGasSpendSessionRequest(
+        uint256 _amount,
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         bytes4[] memory functions = new bytes4[](1);
@@ -52,7 +59,12 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createERC20SpendSessionRequest(address _ercAddress, uint _amount, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createERC20SpendSessionRequest(
+        address _ercAddress,
+        uint256 _amount,
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         bytes4[] memory functions = new bytes4[](1);
@@ -63,10 +75,8 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
         SessionCallsStructs.SessionRequest_ERC20Allowance[] memory erc20Allowances =
             new SessionCallsStructs.SessionRequest_ERC20Allowance[](1);
-        erc20Allowances[0] = SessionCallsStructs.SessionRequest_ERC20Allowance({
-            erc20Contract: _ercAddress,
-            allowance: _amount
-        });
+        erc20Allowances[0] =
+            SessionCallsStructs.SessionRequest_ERC20Allowance({ erc20Contract: _ercAddress, allowance: _amount });
         return SessionCallsStructs.SessionRequest({
             nativeAllowance: 0,
             contractFunctionSelectors: selectors,
@@ -76,7 +86,13 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createERC1155SpendSessionRequest(address _ercAddress, uint256 _tokenId, uint _amount, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createERC1155SpendSessionRequest(
+        address _ercAddress,
+        uint256 _tokenId,
+        uint256 _amount,
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
@@ -100,7 +116,13 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createERC1155SpendSessionRequest(address _ercAddress, uint256[] memory _tokenIds, uint256[] memory _amounts, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createERC1155SpendSessionRequest(
+        address _ercAddress,
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts,
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
@@ -124,7 +146,12 @@ abstract contract TestSessionUtilities is TestUtilities {
         });
     }
 
-    function createERC721TransferSessionRequest(address _ercAddress, uint256 _tokenId, address _sessionContract, bytes4 _functionSelector) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createERC721TransferSessionRequest(
+        address _ercAddress,
+        uint256 _tokenId,
+        address _sessionContract,
+        bytes4 _functionSelector
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
         selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
@@ -150,11 +177,15 @@ abstract contract TestSessionUtilities is TestUtilities {
     /**
      * @dev Assumes that each contract will invoke 1 function selector
      */
-    function createGasSpendSessionRequestMulti(uint _amount, address[] memory sessionContracts, bytes4[] memory functionSelectors) internal pure returns (SessionCallsStructs.SessionRequest memory) {
+    function createGasSpendSessionRequestMulti(
+        uint256 _amount,
+        address[] memory sessionContracts,
+        bytes4[] memory functionSelectors
+    ) internal pure returns (SessionCallsStructs.SessionRequest memory) {
         require(sessionContracts.length == functionSelectors.length, "Session contract function length mismatch");
         SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
             new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](sessionContracts.length);
-        for (uint i = 0; i < sessionContracts.length; i++) {    
+        for (uint256 i = 0; i < sessionContracts.length; i++) {
             bytes4[] memory functions = new bytes4[](1);
             functions[i] = functionSelectors[i];
             selectors[i] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import "forge-std/Script.sol";
 import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
@@ -7,7 +7,7 @@ import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 import { ScriptUtils } from "script/ScriptUtils.sol";
 
 // example script cli:
-//   forge script script/deploy/create3/DeployCreate3Factory.s.sol --fork-url http://localhost:8545 --broadcast  
+//   forge script script/deploy/create3/DeployCreate3Factory.s.sol --fork-url http://localhost:8545 --broadcast
 
 /**
  * @dev Deploys a new CREATE3Factory contract.

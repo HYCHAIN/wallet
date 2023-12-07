@@ -7,14 +7,19 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import "./IPreauthorizedCalls.sol";
 import "../Calls/Calls.sol";
 import "./PreauthorizedCallsStorage.sol";
 
 contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
+    error CallNotPreauthorized();
+    error CallTimelocked();
+    error CallIntervalUnmet();
+    error CallMaxCallsReached();
+    error MaxCallsMustNotBeZero();
+
     function preauthorizeCall(
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         PreauthorizedCallsStructs.CallRequestPreauthorization calldata _callRequestPreauthorization,
@@ -27,7 +32,9 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
             _signatures
         )
     {
-        require(_callRequestPreauthorization.maxCalls > 0, "CallRequestPreauthorization.maxCalls must not be 0");
+        if (_callRequestPreauthorization.maxCalls == 0) {
+            revert MaxCallsMustNotBeZero();
+        }
 
         PreauthorizedCallsStorage.layout().callRequestPreauthorizations[keccak256(
             abi.encode(
@@ -68,14 +75,21 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
             crp = getCallRequestPreauthorization(address(0), _callRequest);
         }
 
-        require(crp.maxCalls > 0, "Call not preauthorized");
-        require(crp.unlockTimestamp == 0 || block.timestamp >= crp.unlockTimestamp, "Call timelocked");
-        require(
-            crp.lastCallTimestamp == 0 || crp.minCallInterval == 0
-                || (block.timestamp >= crp.lastCallTimestamp + crp.minCallInterval),
-            "Call interval unmet"
-        );
-        require(crp.callCount < crp.maxCalls, "Max calls reached");
+        if (crp.maxCalls == 0) {
+            revert CallNotPreauthorized();
+        }
+        if (crp.unlockTimestamp != 0 && block.timestamp < crp.unlockTimestamp) {
+            revert CallTimelocked();
+        }
+        if (
+            crp.lastCallTimestamp != 0 && crp.minCallInterval != 0
+                && (block.timestamp < crp.lastCallTimestamp + crp.minCallInterval)
+        ) {
+            revert CallIntervalUnmet();
+        }
+        if (crp.callCount >= crp.maxCalls) {
+            revert CallMaxCallsReached();
+        }
 
         crp.callCount += 1;
         crp.lastCallTimestamp = uint64(block.timestamp);

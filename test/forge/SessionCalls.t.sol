@@ -9,7 +9,7 @@ import { SessionCalls, Calls, SessionCallsStorage } from "contracts/modules/Sess
 import { ERC20MockDecimals } from "test/forge/mocks/ERC20MockDecimals.sol";
 import { ERC1155Mock } from "test/forge/mocks/ERC1155Mock.sol";
 import { ERC721Mock } from "test/forge/mocks/ERC721Mock.sol";
-import { ERC1155Holder, ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { ERC721Holder } from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -25,13 +25,7 @@ contract SessionCallsImpl is SessionCalls, ERC1155Holder, ERC721Holder {
         __SessionCalls_init(_controller);
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, Calls)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Holder, Calls) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
@@ -70,8 +64,10 @@ contract RandomContract is ERC1155Holder, ERC721Holder {
 }
 
 contract SessionCallsTest is TestBase {
-    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR1 = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
-    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 = bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
+    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR1 =
+        bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
+    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
+        bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
 
     SessionCallsImpl _calls;
     RandomContract _contract;
@@ -117,7 +113,7 @@ contract SessionCallsTest is TestBase {
 
     function testRevertEndingNonexistentSession() public {
         bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, block.chainid)));
-        
+
         vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, leet));
         _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig));
     }
@@ -151,7 +147,7 @@ contract SessionCallsTest is TestBase {
         vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, deployer));
         _calls.sessionMultiCall(reqs);
     }
-    
+
     function testRevertSessionExpired() public {
         uint256 exp = (block.timestamp + 1 hours);
         SessionCallsStructs.SessionRequest memory req = createEmptySessionRequest();
@@ -163,12 +159,14 @@ contract SessionCallsTest is TestBase {
 
         vm.prank(leet);
         vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.SessionExpired.selector));
-        _calls.sessionCall(CallsStructs.CallRequest({
-            target: address(_erc20),
-            value: 0,
-            data: abi.encodeCall(ERC20MockDecimals.decimals, ()),
-            nonce: ++nonceCur
-        }));
+        _calls.sessionCall(
+            CallsStructs.CallRequest({
+                target: address(_erc20),
+                value: 0,
+                data: abi.encodeCall(ERC20MockDecimals.decimals, ()),
+                nonce: ++nonceCur
+            })
+        );
     }
 
     function testRevertUnauthorizedCalls() public {
@@ -194,11 +192,13 @@ contract SessionCallsTest is TestBase {
         });
 
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.UnauthorizedSessionCall.selector,
-            address(_erc20),
-            ERC20MockDecimals.decimals.selector
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector,
+                address(_erc20),
+                ERC20MockDecimals.decimals.selector
+            )
+        );
         _calls.sessionCall(_callReq);
 
         // Make call for `transfer` function on unrelated erc20 contract
@@ -211,11 +211,13 @@ contract SessionCallsTest is TestBase {
         });
 
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.UnauthorizedSessionCall.selector,
-            address(_erc20Other),
-            ERC20MockDecimals.transfer.selector
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector,
+                address(_erc20Other),
+                ERC20MockDecimals.transfer.selector
+            )
+        );
         _calls.sessionCall(_callReq);
     }
 
@@ -246,11 +248,9 @@ contract SessionCallsTest is TestBase {
         _calls.sessionCall(_callReq);
 
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientNativeTokenAllowance.selector,
-            1 ether,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(SessionCallsStorage.InsufficientNativeTokenAllowance.selector, 1 ether, 0)
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(9 ether, address(_calls).balance);
@@ -269,11 +269,9 @@ contract SessionCallsTest is TestBase {
         vm.prank(leet);
         _calls.sessionCall(_callReq);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientNativeTokenAllowance.selector,
-            1 ether,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(SessionCallsStorage.InsufficientNativeTokenAllowance.selector, 1 ether, 0)
+        );
         vm.prank(leet);
         _calls.sessionCall(_callReq);
 
@@ -295,11 +293,9 @@ contract SessionCallsTest is TestBase {
         vm.prank(leet);
         _calls.sessionMultiCall(reqs);
 
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientNativeTokenAllowance.selector,
-            1 ether,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(SessionCallsStorage.InsufficientNativeTokenAllowance.selector, 1 ether, 0)
+        );
         vm.prank(leet);
         _calls.sessionMultiCall(reqs);
 
@@ -315,11 +311,9 @@ contract SessionCallsTest is TestBase {
             ++nonceCur
         );
 
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientNativeTokenAllowance.selector,
-            1 ether,
-            0.5 ether
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(SessionCallsStorage.InsufficientNativeTokenAllowance.selector, 1 ether, 0.5 ether)
+        );
         vm.prank(leet);
         _calls.sessionMultiCall(reqs);
     }
@@ -397,12 +391,11 @@ contract SessionCallsTest is TestBase {
         _calls.sessionCall(_callReq);
 
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector,
-            address(_erc20),
-            1 ether,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(9 ether, _erc20.balanceOf(address(_calls)));
@@ -453,12 +446,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call again without the required allowance
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector,
-            address(_erc20),
-            1 ether,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(8 ether, _erc20.balanceOf(address(_calls)));
@@ -473,11 +465,11 @@ contract SessionCallsTest is TestBase {
         debug("Is leet ERC20: ", _couldBeERC20(leet));
     }
 
-    function balanceOf(address) public pure returns(uint256) {
+    function balanceOf(address) public pure returns (uint256) {
         return 0;
     }
 
-    function totalSupply() public pure returns(uint256) {
+    function totalSupply() public pure returns (uint256) {
         return 0;
     }
 
@@ -485,19 +477,20 @@ contract SessionCallsTest is TestBase {
         return interfaceId == type(IERC721).interfaceId;
     }
 
-    function _couldBeERC20(address _targetContract) private view returns(bool couldBeERC20_) {
-        (bool _success, bytes memory _returnData) = _targetContract.staticcall(abi.encodeCall(IERC20.balanceOf, (address(this))));
+    function _couldBeERC20(address _targetContract) private view returns (bool couldBeERC20_) {
+        (bool _success, bytes memory _returnData) =
+            _targetContract.staticcall(abi.encodeCall(IERC20.balanceOf, (address(this))));
         couldBeERC20_ = _success && _returnData.length == 32;
-        if(couldBeERC20_) {
+        if (couldBeERC20_) {
             // If the contract has balanceOf AND totalSupply, it's definitely a token contract of some sort.
             (_success, _returnData) = _targetContract.staticcall(abi.encodeCall(IERC20.totalSupply, ()));
             couldBeERC20_ = _success && _returnData.length == 32;
-            if(couldBeERC20_) {
+            if (couldBeERC20_) {
                 // If the contract has balanceOf AND totalSupply, and does not support ERC721/ERC1155, it's likely an ERC20
-                if(_supportsInterface(_targetContract, type(IERC721).interfaceId)) {
+                if (_supportsInterface(_targetContract, type(IERC721).interfaceId)) {
                     return false; // If it supports ERC721, it's not an ERC20
                 }
-                if(_supportsInterface(_targetContract, type(IERC1155).interfaceId)) {
+                if (_supportsInterface(_targetContract, type(IERC1155).interfaceId)) {
                     return false; // If it supports ERC1155, it's not an ERC20
                 }
             }
@@ -509,8 +502,12 @@ contract SessionCallsTest is TestBase {
      * @param _targetContract The contract to check.
      * @param _interfaceId The interface to check for support.
      */
-    function _supportsInterface(address _targetContract, bytes4 _interfaceId) private view returns (bool isSupported_) {
-        (bool _success,bytes memory _returnData) = _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
+    function _supportsInterface(
+        address _targetContract,
+        bytes4 _interfaceId
+    ) private view returns (bool isSupported_) {
+        (bool _success, bytes memory _returnData) =
+            _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
         isSupported_ = _success && abi.decode(_returnData, (bool));
     }
 
@@ -549,13 +546,15 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeTransferFrom again without required allowance
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC1155Transfer.selector,
-            address(_erc1155),
-            _testTokenId,
-            2,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC1155Transfer.selector,
+                address(_erc1155),
+                _testTokenId,
+                2,
+                0
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(8, _erc1155.balanceOf(address(_calls), _testTokenId));
@@ -567,7 +566,11 @@ contract SessionCallsTest is TestBase {
             signingPK,
             leet,
             createERC1155SpendSessionRequest(
-                address(_erc1155), asSingletonArray(_testTokenId), asSingletonArray(2), address(_erc1155), ERC1155Mock.safeBatchTransferFrom.selector
+                address(_erc1155),
+                asSingletonArray(_testTokenId),
+                asSingletonArray(2),
+                address(_erc1155),
+                ERC1155Mock.safeBatchTransferFrom.selector
             ),
             (block.timestamp + 1 days),
             ++nonceCur
@@ -579,7 +582,7 @@ contract SessionCallsTest is TestBase {
             data: abi.encodeCall(
                 ERC1155Mock.safeBatchTransferFrom,
                 (address(_calls), leet, asSingletonArray(_testTokenId), asSingletonArray(2), "")
-            ),
+                ),
             nonce: ++nonceCur
         });
 
@@ -589,13 +592,15 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeBatchTransferFrom again without required allowance
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC1155Transfer.selector,
-            address(_erc1155),
-            _testTokenId,
-            2,
-            0
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC1155Transfer.selector,
+                address(_erc1155),
+                _testTokenId,
+                2,
+                0
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(6, _erc1155.balanceOf(address(_calls), _testTokenId));
@@ -691,11 +696,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call transferFrom again without required allowance and without the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(leet, _erc721.ownerOf(_testTokenId));
@@ -707,11 +712,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call transferFrom again without required allowance and with the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
 
         // safeTransferFrom (no bytes parameter - SAFE_TRANSFER_FROM_SELECTOR1) session test
@@ -743,11 +748,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeTransferFrom again without required allowance and without the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(leet, _erc721.ownerOf(_testTokenId));
@@ -759,11 +764,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeTransferFrom again without required allowance and with the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
 
         // safeTransferFrom (with bytes parameter - SAFE_TRANSFER_FROM_SELECTOR2) session test
@@ -795,11 +800,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeTransferFrom again without required allowance and without the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
 
         assertEq(leet, _erc721.ownerOf(_testTokenId));
@@ -811,11 +816,11 @@ contract SessionCallsTest is TestBase {
 
         // Try to call safeTransferFrom again without required allowance and with the token
         vm.prank(leet);
-        vm.expectRevert(abi.encodeWithSelector(
-            SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector,
-            address(_erc721),
-            _testTokenId
-        ));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+            )
+        );
         _calls.sessionCall(_callReq);
     }
 

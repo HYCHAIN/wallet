@@ -7,10 +7,9 @@
 //
 // https://hytopia.com
 //
+pragma solidity 0.8.23;
 
-pragma solidity 0.8.18;
-
-import "./IERC1271.sol";
+import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "../Controllers/Controllers.sol";
 import "../../utils/Bytes.sol";
 

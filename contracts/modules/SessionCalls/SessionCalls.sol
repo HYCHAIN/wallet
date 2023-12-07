@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
@@ -23,8 +22,10 @@ import "./SessionCallsStorage.sol";
 
 contract SessionCalls is Initializable, ISessionCalls, Calls {
     bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x0;
-    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR1 = bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
-    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 = bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
+    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR1 =
+        bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
+    bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
+        bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
 
     /**
      * @dev Disables initializations for any implementation contracts deployed.
@@ -132,22 +133,24 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      */
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) public returns (bytes memory) {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        if(_l.nextSessionId[msg.sender] == 0) {
+        if (_l.nextSessionId[msg.sender] == 0) {
             revert SessionCallsStorage.NoSessionStarted(msg.sender);
         }
-        SessionCallsStructs.Session storage session = _l.sessions[msg.sender][SessionCallsStorage
-            .layout().nextSessionId[msg.sender] - 1];
+        SessionCallsStructs.Session storage session =
+            _l.sessions[msg.sender][SessionCallsStorage.layout().nextSessionId[msg.sender] - 1];
 
-        if(session.expiresAt <= block.timestamp) {
+        if (session.expiresAt <= block.timestamp) {
             revert SessionCallsStorage.SessionExpired();
         }
-        if(_callRequest.value > session.allowances[address(0)][0]) {
-            revert SessionCallsStorage.InsufficientNativeTokenAllowance(_callRequest.value, session.allowances[address(0)][0]);
+        if (_callRequest.value > session.allowances[address(0)][0]) {
+            revert SessionCallsStorage.InsufficientNativeTokenAllowance(
+                _callRequest.value, session.allowances[address(0)][0]
+            );
         }
 
         // Check if the the given function is approved for the target in this session.
         bytes4 _functionSelector = bytes4(_callRequest.data);
-        if(!_isFunctionApprovedForSession(session, _callRequest.target, _functionSelector)) {
+        if (!_isFunctionApprovedForSession(session, _callRequest.target, _functionSelector)) {
             revert SessionCallsStorage.UnauthorizedSessionCall(_callRequest.target, _functionSelector);
         }
 
@@ -181,13 +184,9 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _caller The caller to check for an active session.
      * @return hasSession_ True if the caller has an active session, false otherwise.
      */
-    function hasActiveSession(address _caller)
-        external
-        view
-        returns (bool hasSession_)
-    {
+    function hasActiveSession(address _caller) external view returns (bool hasSession_) {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        if(_l.nextSessionId[_caller] == 0) {
+        if (_l.nextSessionId[_caller] == 0) {
             return false;
         }
         SessionCallsStructs.Session storage session = _l.sessions[_caller][_l.nextSessionId[_caller] - 1];
@@ -196,11 +195,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
     function _endSessionForCaller(address _caller) private {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        if(_l.nextSessionId[_caller] == 0) {
+        if (_l.nextSessionId[_caller] == 0) {
             revert SessionCallsStorage.NoSessionStarted(_caller);
         }
-        _l.sessions[_caller][_l.nextSessionId[_caller] - 1]
-            .expiresAt = 0;
+        _l.sessions[_caller][_l.nextSessionId[_caller] - 1].expiresAt = 0;
     }
 
     /**
@@ -210,30 +208,38 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _callRequest The request payload for the call.
      * @param _functionSelector The function for the target contract being called.
      */
-    function _deductERC20AllowancesIfNeeded(SessionCallsStructs.Session storage session, CallsStructs.CallRequest calldata _callRequest, bytes4 _functionSelector) private {
-        if(_functionSelector == ERC20.transfer.selector) {
-            if(!_couldBeERC20(_callRequest.target)) {
+    function _deductERC20AllowancesIfNeeded(
+        SessionCallsStructs.Session storage session,
+        CallsStructs.CallRequest calldata _callRequest,
+        bytes4 _functionSelector
+    ) private {
+        if (_functionSelector == ERC20.transfer.selector) {
+            if (!_couldBeERC20(_callRequest.target)) {
                 // It couldn't be an ERC20 contract, so we don't need to check allowances.
                 // It could be an ERC721, since they both have the `transferFrom` function.
                 return;
             }
 
-            (,uint256 _amount) = abi.decode(_callRequest.data[4:], (address, uint256));
+            (, uint256 _amount) = abi.decode(_callRequest.data[4:], (address, uint256));
 
-            if(session.allowances[_callRequest.target][0] < _amount) {
-                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(_callRequest.target, _amount, session.allowances[_callRequest.target][0]);
+            if (session.allowances[_callRequest.target][0] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(
+                    _callRequest.target, _amount, session.allowances[_callRequest.target][0]
+                );
             }
 
             session.allowances[_callRequest.target][0] -= _amount;
-        } else if(_functionSelector == ERC20.transferFrom.selector) {
-            if(!_couldBeERC20(_callRequest.target)) {
+        } else if (_functionSelector == ERC20.transferFrom.selector) {
+            if (!_couldBeERC20(_callRequest.target)) {
                 // It couldn't be an ERC20 contract, so we don't need to check allowances.
                 return;
             }
-            (,,uint256 _amount) = abi.decode(_callRequest.data[4:], (address, address, uint256));
+            (,, uint256 _amount) = abi.decode(_callRequest.data[4:], (address, address, uint256));
 
-            if(session.allowances[_callRequest.target][0] < _amount) {
-                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(_callRequest.target, _amount, session.allowances[_callRequest.target][0]);
+            if (session.allowances[_callRequest.target][0] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC20Transfer(
+                    _callRequest.target, _amount, session.allowances[_callRequest.target][0]
+                );
             }
 
             session.allowances[_callRequest.target][0] -= _amount;
@@ -247,31 +253,44 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _callRequest The request payload for the call.
      * @param _functionSelector The function for the target contract being called.
      */
-    function _deductERC1155AllowancesIfNeeded(SessionCallsStructs.Session storage session, CallsStructs.CallRequest calldata _callRequest, bytes4 _functionSelector) private {
-        if(_functionSelector == IERC1155.safeTransferFrom.selector) {
-            if(!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
+    function _deductERC1155AllowancesIfNeeded(
+        SessionCallsStructs.Session storage session,
+        CallsStructs.CallRequest calldata _callRequest,
+        bytes4 _functionSelector
+    ) private {
+        if (_functionSelector == IERC1155.safeTransferFrom.selector) {
+            if (!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
                 // Non-ERC1155 standard contract calling safeTransferFrom.
                 return;
             }
 
-            (,, uint256 _tokenId, uint256 _amount,) = abi.decode(_callRequest.data[4:], (address, address, uint256, uint256, bytes));
+            (,, uint256 _tokenId, uint256 _amount,) =
+                abi.decode(_callRequest.data[4:], (address, address, uint256, uint256, bytes));
 
-            if(session.allowances[_callRequest.target][_tokenId] < _amount) {
-                revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(_callRequest.target, _tokenId, _amount, session.allowances[_callRequest.target][_tokenId]);
+            if (session.allowances[_callRequest.target][_tokenId] < _amount) {
+                revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(
+                    _callRequest.target, _tokenId, _amount, session.allowances[_callRequest.target][_tokenId]
+                );
             }
 
             session.allowances[_callRequest.target][_tokenId] -= _amount;
-        } else if(_functionSelector == IERC1155.safeBatchTransferFrom.selector) {
-            if(!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
+        } else if (_functionSelector == IERC1155.safeBatchTransferFrom.selector) {
+            if (!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
                 // Non-ERC1155 standard contract calling safeBatchTransferFrom.
                 return;
             }
 
-            (,, uint256[] memory _tokenIds, uint256[] memory _amounts,) = abi.decode(_callRequest.data[4:], (address, address, uint256[], uint256[], bytes));
+            (,, uint256[] memory _tokenIds, uint256[] memory _amounts,) =
+                abi.decode(_callRequest.data[4:], (address, address, uint256[], uint256[], bytes));
 
-            for (uint i = 0; i < _tokenIds.length; i++) {
-                if(session.allowances[_callRequest.target][_tokenIds[i]] < _amounts[i]) {
-                    revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(_callRequest.target, _tokenIds[i], _amounts[i], session.allowances[_callRequest.target][_tokenIds[i]]);
+            for (uint256 i = 0; i < _tokenIds.length; i++) {
+                if (session.allowances[_callRequest.target][_tokenIds[i]] < _amounts[i]) {
+                    revert SessionCallsStorage.InsufficientAllowanceForERC1155Transfer(
+                        _callRequest.target,
+                        _tokenIds[i],
+                        _amounts[i],
+                        session.allowances[_callRequest.target][_tokenIds[i]]
+                    );
                 }
 
                 session.allowances[_callRequest.target][_tokenIds[i]] -= _amounts[i];
@@ -286,63 +305,67 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _callRequest The request payload for the call.
      * @param _functionSelector The function for the target contract being called.
      */
-    function _deductERC721AllowancesIfNeeded(SessionCallsStructs.Session storage session, CallsStructs.CallRequest calldata _callRequest, bytes4 _functionSelector) private {
+    function _deductERC721AllowancesIfNeeded(
+        SessionCallsStructs.Session storage session,
+        CallsStructs.CallRequest calldata _callRequest,
+        bytes4 _functionSelector
+    ) private {
         // Explicitly check approveAlls ONLY if the function is a transfer, otherwise there will always be a
         // gas overhead for checking that storage slot when not needed
 
-        if(_functionSelector == IERC721.transferFrom.selector) {
-            if(!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
+        if (_functionSelector == IERC721.transferFrom.selector) {
+            if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling transferFrom.
                 // Could be an ERC20 contract, since both contracts have `transferFrom`
                 return;
             }
             // If the session gave approval to the entire collection, allow the transfer. No allowance deductions needed.
-            if(session.approveAlls[_callRequest.target]) {
+            if (session.approveAlls[_callRequest.target]) {
                 return;
             }
 
             (,, uint256 _tokenId) = abi.decode(_callRequest.data[4:], (address, address, uint256));
 
             // If there is no allowance for the token, revert.
-            if(session.allowances[_callRequest.target][_tokenId] == 0) {
+            if (session.allowances[_callRequest.target][_tokenId] == 0) {
                 revert SessionCallsStorage.InsufficientAllowanceForERC721Transfer(_callRequest.target, _tokenId);
             }
 
             session.allowances[_callRequest.target][_tokenId] = 0;
-        // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
-        } else if(_functionSelector == SAFE_TRANSFER_FROM_SELECTOR1) {
-            if(!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
+            // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
+        } else if (_functionSelector == SAFE_TRANSFER_FROM_SELECTOR1) {
+            if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling safeTransferFrom.
                 return;
             }
             // If the session gave approval to the entire collection, allow the transfer. No allowance deductions needed.
-            if(session.approveAlls[_callRequest.target]) {
+            if (session.approveAlls[_callRequest.target]) {
                 return;
             }
 
             (,, uint256 _tokenId) = abi.decode(_callRequest.data[4:], (address, address, uint256));
 
             // If there is no allowance for the token, revert.
-            if(session.allowances[_callRequest.target][_tokenId] == 0) {
+            if (session.allowances[_callRequest.target][_tokenId] == 0) {
                 revert SessionCallsStorage.InsufficientAllowanceForERC721Transfer(_callRequest.target, _tokenId);
             }
 
             session.allowances[_callRequest.target][_tokenId] = 0;
-        // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
-        } else if(_functionSelector == SAFE_TRANSFER_FROM_SELECTOR2) {
-            if(!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
+            // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
+        } else if (_functionSelector == SAFE_TRANSFER_FROM_SELECTOR2) {
+            if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling safeTransferFrom.
                 return;
             }
             // If the session gave approval to the entire collection, allow the transfer. No allowance deductions needed.
-            if(session.approveAlls[_callRequest.target]) {
+            if (session.approveAlls[_callRequest.target]) {
                 return;
             }
 
             (,, uint256 _tokenId,) = abi.decode(_callRequest.data[4:], (address, address, uint256, bytes));
 
             // If there is no allowance for the token, revert.
-            if(session.allowances[_callRequest.target][_tokenId] == 0) {
+            if (session.allowances[_callRequest.target][_tokenId] == 0) {
                 revert SessionCallsStorage.InsufficientAllowanceForERC721Transfer(_callRequest.target, _tokenId);
             }
 
@@ -358,11 +381,17 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _targetContract The target contract being called.
      * @param _functionSelector The function for the target contract being called.
      */
-    function _isFunctionApprovedForSession(SessionCallsStructs.Session storage _session, address _targetContract, bytes4 _functionSelector) private view returns(bool isApproved_) {
+    function _isFunctionApprovedForSession(
+        SessionCallsStructs.Session storage _session,
+        address _targetContract,
+        bytes4 _functionSelector
+    ) private view returns (bool isApproved_) {
         // Must have explicit approval for restricted functions even if default all approved
         isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector]
-            || (_session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
-                && !_isRestrictedFunction(_functionSelector));
+            || (
+                _session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
+                    && !_isRestrictedFunction(_functionSelector)
+            );
     }
 
     /**
@@ -373,19 +402,20 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _targetContract The contract to check.
      * @return couldBeERC20_ True if the contract is probably an ERC20, false otherwise.
      */
-    function _couldBeERC20(address _targetContract) private view returns(bool couldBeERC20_) {
-        (bool _success, bytes memory _returnData) = _targetContract.staticcall(abi.encodeCall(IERC20.balanceOf, (address(this))));
+    function _couldBeERC20(address _targetContract) private view returns (bool couldBeERC20_) {
+        (bool _success, bytes memory _returnData) =
+            _targetContract.staticcall(abi.encodeCall(IERC20.balanceOf, (address(this))));
         couldBeERC20_ = _success && _returnData.length == 32;
-        if(couldBeERC20_) {
+        if (couldBeERC20_) {
             // If the contract has balanceOf AND totalSupply, it's definitely a token contract of some sort.
             (_success, _returnData) = _targetContract.staticcall(abi.encodeCall(IERC20.totalSupply, ()));
             couldBeERC20_ = _success && _returnData.length == 32;
-            if(couldBeERC20_) {
+            if (couldBeERC20_) {
                 // If the contract has balanceOf AND totalSupply, and does not support ERC721/ERC1155, it's likely an ERC20
-                if(_supportsInterface(_targetContract, type(IERC721).interfaceId)) {
+                if (_supportsInterface(_targetContract, type(IERC721).interfaceId)) {
                     return false; // If it supports ERC721, it's not an ERC20
                 }
-                if(_supportsInterface(_targetContract, type(IERC1155).interfaceId)) {
+                if (_supportsInterface(_targetContract, type(IERC1155).interfaceId)) {
                     return false; // If it supports ERC1155, it's not an ERC20
                 }
             }
@@ -397,8 +427,12 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _targetContract The contract to check.
      * @param _interfaceId The interface to check for support.
      */
-    function _supportsInterface(address _targetContract, bytes4 _interfaceId) private view returns (bool isSupported_) {
-        (bool _success,bytes memory _returnData) = _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
+    function _supportsInterface(
+        address _targetContract,
+        bytes4 _interfaceId
+    ) private view returns (bool isSupported_) {
+        (bool _success, bytes memory _returnData) =
+            _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
         isSupported_ = _success && abi.decode(_returnData, (bool));
     }
 
@@ -408,13 +442,11 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _functionSelector The function selector to check.
      */
     function _isRestrictedFunction(bytes4 _functionSelector) private pure returns (bool isRestricted_) {
-        if(_functionSelector == ERC20.increaseAllowance.selector
-            || _functionSelector == ERC20.decreaseAllowance.selector
-            || _functionSelector == IERC20.approve.selector
-            || _functionSelector == IERC721.approve.selector
-            || _functionSelector == IERC721.setApprovalForAll.selector
-            || _functionSelector == IERC1155.setApprovalForAll.selector)
-        {
+        if (
+            _functionSelector == IERC20.approve.selector || _functionSelector == IERC721.approve.selector
+                || _functionSelector == IERC721.setApprovalForAll.selector
+                || _functionSelector == IERC1155.setApprovalForAll.selector
+        ) {
             isRestricted_ = true;
         }
     }

@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import "./SessionCallsStructs.sol";
 
@@ -48,6 +47,8 @@ library SessionCallsStorage {
     error UnknownERC1155TransferFunction(bytes4 functionSelector);
     error InvalidStartingERC20BalancesLength(uint256 startingFungibleTokenBalancesLength);
     error InsufficientAllowanceForERC721Transfer(address tokenAddress, uint256 tokenId);
-    error InsufficientAllowanceForERC1155Transfer(address tokenAddress, uint256 tokenId, uint256 amount, uint256 allowance);
+    error InsufficientAllowanceForERC1155Transfer(
+        address tokenAddress, uint256 tokenId, uint256 amount, uint256 allowance
+    );
     error InsufficientAllowanceForERC20Transfer(address tokenAddress, uint256 amount, uint256 allowance);
 }

@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 

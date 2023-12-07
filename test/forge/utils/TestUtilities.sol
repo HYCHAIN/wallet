@@ -3,11 +3,13 @@ pragma solidity ^0.8.0;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 import { Test } from "forge-std/Test.sol";
 
 abstract contract TestUtilities is Test {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
     using Strings for uint256;
 
     // Hex representation of 0123456789abcdef used for character lookup
@@ -155,7 +157,7 @@ abstract contract TestUtilities is Test {
         bytes memory _domainVersion,
         address _receivingContractAddress
     ) internal view virtual returns (bytes32) {
-        return ECDSA.toTypedDataHash(
+        return MessageHashUtils.toTypedDataHash(
             _domainSeparatorV4(_domainName, _domainVersion, _receivingContractAddress), _structHash
         );
     }
@@ -177,13 +179,13 @@ abstract contract TestUtilities is Test {
     }
 
     function signHashEth(uint256 privateKey, bytes32 digest) internal pure returns (bytes memory bytes_) {
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, ECDSA.toEthSignedMessageHash(digest));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest.toEthSignedMessageHash());
         // convert curve to sig bytes for using with ECDSA vs ecrecover
         bytes_ = abi.encodePacked(r, s, v);
     }
 
     function signHashEthVRS(uint256 privateKey, bytes32 digest) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
-        (v, r, s) = vm.sign(privateKey, ECDSA.toEthSignedMessageHash(digest));
+        (v, r, s) = vm.sign(privateKey, digest.toEthSignedMessageHash());
     }
 
     function asSingletonArray(uint256 _item) internal pure returns (uint256[] memory array_) {
@@ -201,7 +203,7 @@ abstract contract TestUtilities is Test {
         array_[0] = _item;
     }
 
-    function slice(bytes memory _bytes, uint _start, uint _length) internal pure returns (bytes memory) {
+    function slice(bytes memory _bytes, uint256 _start, uint256 _length) internal pure returns (bytes memory) {
         require(_bytes.length >= (_start + _length));
 
         bytes memory tempBytes;
@@ -237,9 +239,7 @@ abstract contract TestUtilities is Test {
                 } lt(mc, end) {
                     mc := add(mc, 0x20)
                     cc := add(cc, 0x20)
-                } {
-                    mstore(mc, mload(cc))
-                }
+                } { mstore(mc, mload(cc)) }
 
                 mstore(tempBytes, _length)
 

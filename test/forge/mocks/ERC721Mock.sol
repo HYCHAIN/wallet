@@ -21,11 +21,7 @@ contract ERC721Mock is ERC721 {
     /**
      * @dev needed to reference function selector as ERC721Mock.transferFrom.selector
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 id
-    ) public virtual override {
+    function transferFrom(address from, address to, uint256 id) public virtual override {
         super.transferFrom(from, to, id);
     }
 

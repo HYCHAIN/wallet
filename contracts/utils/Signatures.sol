@@ -7,12 +7,14 @@
 //
 // https://hytopia.com
 //
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 library Signatures {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     function getSigner(bytes32 _inputHash, bytes memory _signature) internal pure returns (address) {
         return _inputHash.toEthSignedMessageHash().recover(_signature);

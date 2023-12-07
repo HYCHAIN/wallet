@@ -7,8 +7,7 @@
 //
 // https://hytopia.com
 //
-
-pragma solidity 0.8.18;
+pragma solidity 0.8.23;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
@@ -17,6 +16,10 @@ import { Signatures } from "../../utils/Signatures.sol";
 import { ControllersStorage } from "./ControllersStorage.sol";
 
 abstract contract Controllers is Initializable, IControllers, ERC165 {
+    error InvalidThreshold();
+    error ThresholdImpossible();
+    error ControllersNotInitialized();
+
     constructor() {
         _disableInitializers();
     }
@@ -60,11 +63,12 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         bytes[] calldata _signatures
     ) external meetsControllersThreshold(keccak256(abi.encode(_threshold, _nonce, block.chainid)), _signatures) {
         ControllersStorage.layout().threshold = _threshold;
-        require(
-            ControllersStorage.layout().threshold > 0
-                && ControllersStorage.layout().threshold <= ControllersStorage.layout().totalWeights,
-            "Invalid threshold"
-        );
+        if (
+            ControllersStorage.layout().threshold == 0
+                || ControllersStorage.layout().threshold > ControllersStorage.layout().totalWeights
+        ) {
+            revert InvalidThreshold();
+        }
     }
 
     function updateControllerWeight(
@@ -78,11 +82,12 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     {
         ControllersStorage.layout().totalWeights =
             ControllersStorage.layout().totalWeights - ControllersStorage.layout().weights[_controller] + _weight;
-        require(
-            ControllersStorage.layout().totalWeights > 0
-                && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold,
-            "Threshold would be impossible"
-        );
+        if (
+            ControllersStorage.layout().totalWeights == 0
+                || ControllersStorage.layout().totalWeights < ControllersStorage.layout().threshold
+        ) {
+            revert ThresholdImpossible();
+        }
         ControllersStorage.layout().weights[_controller] = _weight;
     }
 
@@ -109,11 +114,12 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
 
     function _removeController(address _controller) internal {
         ControllersStorage.layout().totalWeights -= ControllersStorage.layout().weights[_controller];
-        require(
-            ControllersStorage.layout().totalWeights > 0
-                && ControllersStorage.layout().totalWeights >= ControllersStorage.layout().threshold,
-            "Threshold would be impossible"
-        );
+        if (
+            ControllersStorage.layout().totalWeights == 0
+                || ControllersStorage.layout().totalWeights < ControllersStorage.layout().threshold
+        ) {
+            revert ThresholdImpossible();
+        }
         ControllersStorage.layout().weights[_controller] = 0;
     }
 
@@ -147,7 +153,9 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     }
 
     modifier meetsControllersThreshold(bytes32 _inputHash, bytes[] calldata _signatures) {
-        require(ControllersStorage.layout().threshold > 0, "Controllers not initialized");
+        if (ControllersStorage.layout().threshold == 0) {
+            revert ControllersNotInitialized();
+        }
         (bool verified, string memory error) = _verifyControllersThresholdBySignatures(_inputHash, _signatures);
         require(verified, error);
 

@@ -46,11 +46,11 @@ contract ControllersTest is TestBase {
 
     function testRevertRunTxWithoutControllersOrThresholds() public {
         ControllersImpl controller = ControllersImpl(proxify(address(new ControllersImpl())));
-        vm.expectRevert("Controllers not initialized");
+        vm.expectRevert(Controllers.ControllersNotInitialized.selector);
         controller.doSomethingWithConsensus(new bytes[](0));
-        vm.expectRevert("Controllers not initialized");
+        vm.expectRevert(Controllers.ControllersNotInitialized.selector);
         controller.updateControlThreshold(defaultThreshold, 0, new bytes[](0));
-        vm.expectRevert("Controllers not initialized");
+        vm.expectRevert(Controllers.ControllersNotInitialized.selector);
         controller.addControllers(
             arraySingle(deployer), arraySingle(defaultControllerWeight), defaultNonce, new bytes[](0)
         );
