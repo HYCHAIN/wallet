@@ -9,8 +9,8 @@
 //
 pragma solidity 0.8.23;
 
-import "../Calls/ICalls.sol";
-import "./SessionCallsStructs.sol";
+import "./ICalls.sol";
+import "contracts/modules/SessionCalls/SessionCallsStructs.sol";
 
 interface ISessionCalls is ICalls {
     function startSession(

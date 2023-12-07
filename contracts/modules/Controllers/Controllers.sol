@@ -11,7 +11,7 @@ pragma solidity 0.8.23;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import { IControllers } from "./IControllers.sol";
+import { IControllers } from "contracts/interfaces/IControllers.sol";
 import { Signatures } from "../../utils/Signatures.sol";
 import { ControllersStorage } from "./ControllersStorage.sol";
 

@@ -9,8 +9,8 @@
 //
 pragma solidity 0.8.23;
 
-import "../Calls/ICalls.sol";
-import "./PreauthorizedCallsStructs.sol";
+import "./ICalls.sol";
+import "contracts/modules/PreauthorizedCalls/PreauthorizedCallsStructs.sol";
 
 interface IPreauthorizedCalls is ICalls {
     function preauthorizeCall(

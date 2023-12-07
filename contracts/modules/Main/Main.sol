@@ -18,7 +18,7 @@ import { ERC1271 } from "../ERC1271/ERC1271.sol";
 import { Versioned } from "../Versioned/Versioned.sol";
 import { PreauthorizedCalls } from "../PreauthorizedCalls/PreauthorizedCalls.sol";
 import { MainStorage } from "./MainStorage.sol";
-import { IMain } from "./IMain.sol";
+import { IMain } from "contracts/interfaces/IMain.sol";
 
 contract Main is IMain, Initializable, Versioned, PreauthorizedCalls, ERC1155Holder, ERC721Holder, ERC1271 {
     string public constant version = "alpha-1.0.0";

@@ -14,7 +14,7 @@ import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/Upgradea
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
-import { IMain } from "./modules/Main/IMain.sol";
+import { IMain } from "contracts/interfaces/IMain.sol";
 import { Signatures } from "./utils/Signatures.sol";
 
 interface IBeaconProxyFactory {

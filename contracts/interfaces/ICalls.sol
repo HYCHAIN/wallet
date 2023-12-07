@@ -9,7 +9,7 @@
 //
 pragma solidity 0.8.23;
 
-import "./CallsStructs.sol";
+import "contracts/modules/Calls/CallsStructs.sol";
 
 interface ICalls {
     function call(

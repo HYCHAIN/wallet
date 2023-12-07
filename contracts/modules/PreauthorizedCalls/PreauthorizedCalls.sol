@@ -9,7 +9,7 @@
 //
 pragma solidity 0.8.23;
 
-import "./IPreauthorizedCalls.sol";
+import "contracts/interfaces/IPreauthorizedCalls.sol";
 import "../Calls/Calls.sol";
 import "./PreauthorizedCallsStorage.sol";
 
