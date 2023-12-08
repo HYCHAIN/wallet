@@ -12,8 +12,13 @@ pragma solidity 0.8.23;
 library MainStorage {
     bytes32 private constant STORAGE_SLOT = keccak256("com.trymetafab.wallet.Main");
 
+    error UnauthorizedUpgrade();
+
     struct Layout {
-        uint256 __placeholder;
+        /**
+         * @dev a transient value to indicate that controller thereshold has been reached.
+         */
+        bool canUpgrade;
     }
 
     function layout() internal pure returns (Layout storage _layout) {
