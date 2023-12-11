@@ -33,10 +33,18 @@ contract Main is
 {
     string public constant version = "alpha-1.0.0";
 
+    /**
+     * @dev Initialize the contract.
+     * @param _controller The address of the controller to add.
+     */
     function initialize(address _controller) external initializer {
         __Controllers_init(_controller);
     }
 
+    /**
+     * @dev Check if the contract supports an interface.
+     * @param _interfaceID The interface ID to check for support.
+     */
     function supportsInterface(bytes4 _interfaceID)
         public
         view
@@ -56,10 +64,10 @@ contract Main is
      */
     function upgradeToAndCall(
         address newImplementation,
-        bytes memory data,
+        bytes calldata data,
         bytes[] calldata _signatures
     )
-        public
+        external
         payable
         virtual
         onlyProxy

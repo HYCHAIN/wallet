@@ -16,7 +16,7 @@ library MainStorage {
 
     struct Layout {
         /**
-         * @dev a transient value to indicate that controller thereshold has been reached.
+         * @dev a transient value to indicate that controller threshold has been reached.
          */
         bool canUpgrade;
     }

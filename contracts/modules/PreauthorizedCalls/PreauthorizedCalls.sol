@@ -20,6 +20,13 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
     error CallMaxCallsReached();
     error MaxCallsMustNotBeZero();
 
+    /**
+     * @dev Preauthorize a specific call for a given caller.
+     * @param _callRequestPreauthorized The call to be preauthorized.
+     * @param _callRequestPreauthorization The preauthorization details.
+     * @param _nonce The nonce of the transaction to prevent replay attacks.
+     * @param _signatures The signatures of the controllers to execute the transaction.
+     */
     function preauthorizeCall(
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         PreauthorizedCallsStructs.CallRequestPreauthorization calldata _callRequestPreauthorization,
@@ -46,6 +53,12 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         )] = _callRequestPreauthorization;
     }
 
+    /**
+     * @dev Remove a preauthorization.
+     * @param _callRequestPreauthorized The call that was preauthorized to be unpreauthorized.
+     * @param _nonce The nonce of the transaction to prevent replay attacks.
+     * @param _signatures The signatures of the controllers to execute the transaction.
+     */
     function unauthorizeCall(
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         uint256 _nonce,
@@ -66,6 +79,10 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
     ];
     }
 
+    /**
+     * @dev Execute a preauthorized call. Validates that preauthorization was given and hasn't expired.
+     * @param _callRequest The call to execute
+     */
     function preauthorizedCall(CallsStructs.CallRequest calldata _callRequest) public returns (bytes memory) {
         PreauthorizedCallsStructs.CallRequestPreauthorization storage crp =
             getCallRequestPreauthorization(msg.sender, _callRequest);
@@ -97,6 +114,10 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         return _call(_callRequest);
     }
 
+    /**
+     * @dev Execute multiple preauthorized calls at once. Validates that preauthorization was given and hasn't expired.
+     * @param _callRequests The calls to execute
+     */
     function preauthorizedMultiCall(CallsStructs.CallRequest[] calldata _callRequests)
         external
         returns (bytes[] memory)
@@ -110,6 +131,11 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         return results;
     }
 
+    /**
+     * @dev Get the preauthorization status for a given caller and call.
+     * @param _caller The address to check a preauthorization for.
+     * @param _callRequest The call to check a preauthorization for.
+     */
     function getCallRequestPreauthorization(
         address _caller,
         CallsStructs.CallRequest calldata _callRequest
@@ -119,6 +145,10 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         )];
     }
 
+    /**
+     * @dev Check if the contract supports an interface.
+     * @param interfaceId The interface ID to check for support.
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Calls) returns (bool) {
         if (interfaceId == type(IPreauthorizedCalls).interfaceId) {
             return true;

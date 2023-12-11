@@ -34,12 +34,16 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         _disableInitializers();
     }
 
+    /**
+     * @notice Initializes the contract.
+     * @param _controller The address of the controller to add.
+     */
     function __SessionCalls_init(address _controller) internal onlyInitializing {
         __Calls_init(_controller);
     }
 
     /**
-     *
+     * @dev Starts a session for a given caller. Needs sufficient controller authorization via signatures.
      * @param _caller The caller to start the session for.
      * @param _sessionRequest The request payload for the session to be started.
      * @param _expiresAt The epoch of when the session should expire.

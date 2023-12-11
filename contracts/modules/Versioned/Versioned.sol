@@ -16,8 +16,9 @@ abstract contract Versioned is Initializable {
         _disableInitializers();
     }
 
-    function __Versioned_init() internal onlyInitializing { }
-
+    /**
+     * @dev Returns the current version of the contract. Tracked by the Initializable versioning system.
+     */
     function getCurrentVersion() external view returns (uint256) {
         return Initializable._getInitializedVersion();
     }

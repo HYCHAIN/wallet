@@ -16,12 +16,20 @@ import "../../utils/Bytes.sol";
 abstract contract ERC1271 is IERC1271, Controllers {
     using Bytes for bytes;
 
+    error InvalidSignatureLength();
+
     uint8 private constant SIGNATURE_BYTES_LENGTH = 65;
 
     bytes4 private constant ERC1271_MAGIC_BYTES_BYTES_SUCCESS = 0x20c13b0b;
     bytes4 private constant ERC1271_MAGIC_BYTES32_BYTES_SUCCESS = 0x1626ba7e;
     bytes4 private constant ERC1271_MAGIC_BYTES_FAILURE = 0x00000000;
 
+    /**
+     * @dev Returns whether the given signature is valid for the given data
+     * @param _data Data to validate against the given signature
+     * @param _signature Signature to verify against the given data
+     * @return magicValue Magic value if the signature is valid for the given data, otherwise `bytes4(0)`.
+     */
     function isValidSignature(
         bytes calldata _data,
         bytes calldata _signature
@@ -33,6 +41,12 @@ abstract contract ERC1271 is IERC1271, Controllers {
         }
     }
 
+    /**
+     * @dev Returns whether the given signature is valid for the given data hash
+     * @param _hash Hashed data to validate against the given signature
+     * @param _signature Signature to verify against the given data hash
+     * @return magicValue Magic value if the signature is valid for the given hash, otherwise `bytes4(0)`.
+     */
     function isValidSignature(
         bytes32 _hash,
         bytes calldata _signature
@@ -45,7 +59,9 @@ abstract contract ERC1271 is IERC1271, Controllers {
     }
 
     function _validatePackedSignature(bytes32 _hash, bytes calldata _signature) private view returns (bool) {
-        require(_signature.length % SIGNATURE_BYTES_LENGTH == 0, "Unexpected packaged signature byte length");
+        if (_signature.length % SIGNATURE_BYTES_LENGTH != 0) {
+            revert InvalidSignatureLength();
+        }
         uint256 totalSignatures = _signature.length / SIGNATURE_BYTES_LENGTH;
         bytes[] memory signatures = new bytes[](totalSignatures);
 
@@ -58,6 +74,10 @@ abstract contract ERC1271 is IERC1271, Controllers {
         return verified;
     }
 
+    /**
+     * @dev Check if the contract supports an interface.
+     * @param interfaceId Interface ID of the function to check support for
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
         if (interfaceId == type(IERC1271).interfaceId) {
             return true;

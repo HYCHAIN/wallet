@@ -19,10 +19,19 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         _disableInitializers();
     }
 
+    /**
+     * @notice Initializes the contract.
+     * @param _controller The address of the controller to add.
+     */
     function __Calls_init(address _controller) internal onlyInitializing {
         __Controllers_init(_controller);
     }
 
+    /**
+     * @dev Execute a call.
+     * @param _callRequest The call to execute
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
     function call(
         CallsStructs.CallRequest calldata _callRequest,
         bytes[] calldata _signatures
@@ -34,6 +43,11 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         return _call(_callRequest);
     }
 
+    /**
+     * @dev Execute multiple calls at once.
+     * @param _callRequests The calls to execute
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
     function multiCall(
         CallsStructs.CallRequest[] calldata _callRequests,
         bytes[] calldata _signatures
@@ -49,6 +63,18 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         }
 
         return results;
+    }
+
+    /**
+     * @dev Check if the contract supports an interface.
+     * @param interfaceId The interface ID to check for support.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
+        if (interfaceId == type(ICalls).interfaceId) {
+            return true;
+        }
+
+        return super.supportsInterface(interfaceId);
     }
 
     function _call(CallsStructs.CallRequest calldata _callRequest) internal returns (bytes memory) {
@@ -67,13 +93,5 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         }
 
         return result;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(Controllers) returns (bool) {
-        if (interfaceId == type(ICalls).interfaceId) {
-            return true;
-        }
-
-        return super.supportsInterface(interfaceId);
     }
 }

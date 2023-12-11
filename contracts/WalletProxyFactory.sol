@@ -21,6 +21,9 @@ interface IWalletProxyFactory {
     function latestWalletImplementation() external view returns (address);
 }
 
+/**
+ * @dev This contract wraps the proxy contract to allow for constructor-less creation to make address calculating easier/more expected.
+ */
 contract FactoryCreatedUUPSProxy is ERC1967Proxy {
     constructor() ERC1967Proxy(IWalletProxyFactory(msg.sender).latestWalletImplementation(), "") { }
 }
@@ -40,6 +43,10 @@ contract WalletProxyFactory {
      */
     address public latestWalletImplementation;
 
+    /**
+     * @dev Initialize the contract. Sets the initial implementation address.
+     * @param _walletImpl The address of the implementation contract to use for the WalletProxy.
+     */
     constructor(address _walletImpl) {
         if (_walletImpl == address(0)) {
             revert WalletImplInvalid();

@@ -24,15 +24,22 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         _disableInitializers();
     }
 
+    /**
+     * @dev Initialize the contract.
+     * @param _controller The address of the controller to add.
+     */
     function __Controllers_init(address _controller) internal onlyInitializing {
         _addController(_controller, 1);
         ControllersStorage.layout().threshold = 1;
     }
 
     /**
-     * External Functions
+     * @dev Add controllers to the contract.
+     * @param _controllers The addresses of the controllers to add.
+     * @param _weights The weights of the controllers to add.
+     * @param _nonce A nonce to prevent replay attacks.
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
      */
-
     function addControllers(
         address[] calldata _controllers,
         uint256[] calldata _weights,
@@ -47,6 +54,12 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         }
     }
 
+    /**
+     * @dev Remove controllers from the contract.
+     * @param _controllers The addresses of the controllers to remove.
+     * @param _nonce A nonce to prevent replay attacks.
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
     function removeControllers(
         address[] calldata _controllers,
         uint256 _nonce,
@@ -57,6 +70,12 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         }
     }
 
+    /**
+     * @dev Update the threshold required to invoke functions on the contract.
+     * @param _threshold The new threshold required to invoke functions on the wallet.
+     * @param _nonce A nonce to prevent replay attacks.
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
     function updateControlThreshold(
         uint256 _threshold,
         uint256 _nonce,
@@ -71,6 +90,13 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         }
     }
 
+    /**
+     * @dev Update the weight of a controller.
+     * @param _controller The address of the controller to update the weight of.
+     * @param _weight The new weight of the controller.
+     * @param _nonce A nonce to prevent replay attacks.
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
     function updateControllerWeight(
         address _controller,
         uint256 _weight,
@@ -91,21 +117,39 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         ControllersStorage.layout().weights[_controller] = _weight;
     }
 
+    /**
+     * @dev Returns the threshold required to invoke functions on the contract.
+     */
     function controlThreshold() external view returns (uint256) {
         return ControllersStorage.layout().threshold;
     }
 
+    /**
+     * @dev Returns the weight of a controller.
+     * @param _controller Address of the controller to get the weight of.
+     */
     function controllerWeight(address _controller) external view returns (uint256) {
         return ControllersStorage.layout().weights[_controller];
     }
 
+    /**
+     * @dev Returns the total weight of all controllers.
+     */
     function controllersTotalWeight() external view returns (uint256) {
         return ControllersStorage.layout().totalWeights;
     }
 
     /**
-     * Internal Functions
+     * @dev Check if the contract supports an interface.
+     * @param interfaceId Interface ID of the function to check support for
      */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+        if (interfaceId == type(IControllers).interfaceId) {
+            return true;
+        }
+
+        return super.supportsInterface(interfaceId);
+    }
 
     function _addController(address _controller, uint256 _weight) internal {
         ControllersStorage.layout().totalWeights += _weight;
@@ -164,13 +208,5 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         }
 
         _;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
-        if (interfaceId == type(IControllers).interfaceId) {
-            return true;
-        }
-
-        return super.supportsInterface(interfaceId);
     }
 }

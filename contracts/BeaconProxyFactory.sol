@@ -21,6 +21,9 @@ interface IBeaconProxyFactory {
     function beacon() external view returns (address);
 }
 
+/**
+ * @dev This contract wraps the constructor args to make address calculating easier/more expected.
+ */
 contract FactoryCreatedBeaconProxy is BeaconProxy {
     constructor() BeaconProxy(IBeaconProxyFactory(msg.sender).beacon(), "") { }
 }
@@ -41,6 +44,10 @@ contract BeaconProxyFactory is IBeaconProxyFactory {
      */
     address public override beacon;
 
+    /**
+     * @dev Initialize the contract. Sets the initial implementation address.
+     * @param _beaconImpl The address of the implementation contract to use for the BeaconProxy.
+     */
     constructor(address _beaconImpl) {
         if (_beaconImpl == address(0)) {
             revert BeaconImplInvalid();
