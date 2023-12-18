@@ -21,7 +21,6 @@ import "../Calls/Calls.sol";
 import "./SessionCallsStorage.sol";
 
 contract SessionCalls is Initializable, ISessionCalls, Calls {
-    bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x0;
     bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR1 =
         bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
     bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
@@ -378,9 +377,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
     }
 
     /**
-     * @dev Checks if the given function is either explicitly approved for the session, or if the session has
-     *  the MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS selector approved. If the function is a restricted function,
-     *  the MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS selector is ignored
+     * @dev Checks if the given function is either explicitly approved for the session
      * @param _session The session to check.
      * @param _targetContract The target contract being called.
      * @param _functionSelector The function for the target contract being called.
@@ -391,11 +388,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         bytes4 _functionSelector
     ) private view returns (bool isApproved_) {
         // Must have explicit approval for restricted functions even if default all approved
-        isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector]
-            || (
-                _session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
-                    && !_isRestrictedFunction(_functionSelector)
-            );
+        isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector];
     }
 
     /**
@@ -438,20 +431,5 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         (bool _success, bytes memory _returnData) =
             _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
         isSupported_ = _success && abi.decode(_returnData, (bool));
-    }
-
-    /**
-     * @dev Private function vs state storage to allow for beacon updates to be made to all instances without
-     *  needing to update state of each proxy
-     * @param _functionSelector The function selector to check.
-     */
-    function _isRestrictedFunction(bytes4 _functionSelector) private pure returns (bool isRestricted_) {
-        if (
-            _functionSelector == IERC20.approve.selector || _functionSelector == IERC721.approve.selector
-                || _functionSelector == IERC721.setApprovalForAll.selector
-                || _functionSelector == IERC1155.setApprovalForAll.selector
-        ) {
-            isRestricted_ = true;
-        }
     }
 }
