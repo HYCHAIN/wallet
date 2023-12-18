@@ -31,7 +31,7 @@ contract Main is
     ERC721Holder,
     ERC1271
 {
-    string public constant version = "alpha-1.0.0";
+    receive() external payable virtual { }
 
     /**
      * @dev Initialize the contract.

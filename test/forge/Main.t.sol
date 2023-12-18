@@ -47,4 +47,17 @@ contract MainTest is TestBase {
             _callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid))))
         );
     }
+
+    function testCanReceiveNativeToken() public {
+        vm.deal(deployer, 1 ether);
+        assertEq(0, address(_wallet1).balance);
+        assertEq(1 ether, deployer.balance);
+
+        (bool _success, bytes memory _data) = payable(address(_wallet1)).call{ value: 1 ether }("");
+
+        assertTrue(_success);
+        assertEq("", _data);
+        assertEq(1 ether, address(_wallet1).balance);
+        assertEq(0, deployer.balance);
+    }
 }
