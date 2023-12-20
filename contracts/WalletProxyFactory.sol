@@ -62,6 +62,8 @@ contract WalletProxyFactory {
     function createProxy(bytes32 _userSalt) external returns (address createdContract_) {
         createdContract_ = _create(getSalt(msg.sender, _userSalt));
 
+        IMain(createdContract_).initialize(msg.sender);
+
         emit ContractDeployed(createdContract_, false);
     }
 
