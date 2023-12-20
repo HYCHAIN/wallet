@@ -88,15 +88,52 @@ contract ControllersTest is TestBase {
     }
 
     function testAllowRemoveController() public {
+        bytes memory sig = signHashAsMessage(
+            signingPK, keccak256(abi.encode(arraySingle(alice), arraySingle(19), ++nonceCur, block.chainid))
+        );
+        _controllers.addControllers(arraySingle(alice), arraySingle(19), nonceCur, arraySingle(sig));
         _addController(deployer);
-        bytes memory sig =
-            signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(deployer), defaultNonce, block.chainid)));
+
+        assertEq(1, _controllers.controlThreshold());
+
+        sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(deployer), 20, defaultNonce, block.chainid)));
 
         assertEq(1, _controllers.controllerWeight(deployer));
 
-        _controllers.removeControllers(arraySingle(deployer), defaultNonce, arraySingle(sig));
+        _controllers.removeControllers(arraySingle(deployer), 20, defaultNonce, arraySingle(sig));
 
         assertEq(0, _controllers.controllerWeight(deployer));
+        // ensure new threshold was set
+        assertEq(20, _controllers.controlThreshold());
+    }
+
+    function testReplaceController() public {
+        _addController(deployer);
+        bytes memory sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(deployer, alice, defaultNonce, block.chainid)));
+
+        assertEq(2, _controllers.controllersTotalWeight());
+        assertEq(1, _controllers.controllerWeight(deployer));
+        assertEq(0, _controllers.controllerWeight(alice));
+        assertEq(1, _controllers.controlThreshold());
+
+        _controllers.replaceController(deployer, alice, defaultNonce, arraySingle(sig));
+
+        assertEq(2, _controllers.controllersTotalWeight());
+        assertEq(0, _controllers.controllerWeight(deployer));
+        assertEq(1, _controllers.controllerWeight(alice));
+        assertEq(1, _controllers.controlThreshold());
+
+        sig = signHashAsMessage(signingPK, keccak256(abi.encode(deployer, alice, defaultNonce + 1, block.chainid)));
+
+        vm.expectRevert(Controllers.ControllerDoesNotExist.selector);
+        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig));
+
+        _addController(deployer);
+
+        vm.expectRevert(Controllers.ControllerAlreadyExists.selector);
+        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig));
     }
 
     function testAllowUpdateControllerWeight() public {

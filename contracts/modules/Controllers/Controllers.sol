@@ -19,6 +19,8 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     error InvalidThreshold();
     error ThresholdImpossible();
     error ControllersNotInitialized();
+    error ControllerDoesNotExist();
+    error ControllerAlreadyExists();
 
     constructor() {
         _disableInitializers();
@@ -55,19 +57,48 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     }
 
     /**
-     * @dev Remove controllers from the contract.
+     * @dev Remove controllers from the contract. Also sets a new threshold if provided.
      * @param _controllers The addresses of the controllers to remove.
+     * @param _newThreshold The new threshold required to invoke functions on the wallet.
      * @param _nonce A nonce to prevent replay attacks.
      * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
      */
     function removeControllers(
         address[] calldata _controllers,
+        uint256 _newThreshold,
         uint256 _nonce,
         bytes[] calldata _signatures
-    ) external meetsControllersThreshold(keccak256(abi.encode(_controllers, _nonce, block.chainid)), _signatures) {
+    )
+        external
+        meetsControllersThreshold(keccak256(abi.encode(_controllers, _newThreshold, _nonce, block.chainid)), _signatures)
+    {
         for (uint256 i = 0; i < _controllers.length; i++) {
             _removeController(_controllers[i]);
         }
+        // update at the end to ensure new totalWeights has been calculated.
+        if (_newThreshold != 0) {
+            _updateThreshold(_newThreshold);
+        }
+    }
+
+    function replaceController(
+        address _controllerOld,
+        address _controllerNew,
+        uint256 _nonce,
+        bytes[] calldata _signatures
+    )
+        external
+        meetsControllersThreshold(keccak256(abi.encode(_controllerOld, _controllerNew, _nonce, block.chainid)), _signatures)
+    {
+        if (ControllersStorage.layout().weights[_controllerOld] == 0) {
+            revert ControllerDoesNotExist();
+        }
+        if (ControllersStorage.layout().weights[_controllerNew] != 0) {
+            revert ControllerAlreadyExists();
+        }
+        // Add new controller before removing old to avoid threshold issues during replacing.
+        _addController(_controllerNew, ControllersStorage.layout().weights[_controllerOld]);
+        _removeController(_controllerOld);
     }
 
     /**
@@ -81,13 +112,7 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         uint256 _nonce,
         bytes[] calldata _signatures
     ) external meetsControllersThreshold(keccak256(abi.encode(_threshold, _nonce, block.chainid)), _signatures) {
-        ControllersStorage.layout().threshold = _threshold;
-        if (
-            ControllersStorage.layout().threshold == 0
-                || ControllersStorage.layout().threshold > ControllersStorage.layout().totalWeights
-        ) {
-            revert InvalidThreshold();
-        }
+        _updateThreshold(_threshold);
     }
 
     /**
@@ -149,6 +174,16 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         }
 
         return super.supportsInterface(interfaceId);
+    }
+
+    function _updateThreshold(uint256 _threshold) internal {
+        ControllersStorage.layout().threshold = _threshold;
+        if (
+            ControllersStorage.layout().threshold == 0
+                || ControllersStorage.layout().threshold > ControllersStorage.layout().totalWeights
+        ) {
+            revert InvalidThreshold();
+        }
     }
 
     function _addController(address _controller, uint256 _weight) internal {

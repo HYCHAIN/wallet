@@ -19,6 +19,14 @@ interface IControllers {
 
     function removeControllers(
         address[] calldata _controllers,
+        uint256 _newThreshold,
+        uint256 _nonce,
+        bytes[] calldata _signatures
+    ) external;
+
+    function replaceController(
+        address _controllerOld,
+        address _controllerNew,
         uint256 _nonce,
         bytes[] calldata _signatures
     ) external;
