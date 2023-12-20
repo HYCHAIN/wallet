@@ -32,7 +32,8 @@ contract MainTest is TestBase {
     function setUp() public {
         _factory = new BeaconProxyFactory(address(new MainImpl()));
         vm.prank(signingAuthority);
-        _wallet1 = MainImpl(payable(_factory.createProxy(_wallet1Salt)));
+        address _walletAddr = _factory.createProxy(_wallet1Salt);
+        _wallet1 = MainImpl(payable(_walletAddr));
         _beacon = UpgradeableBeacon(_factory.beacon());
     }
 
