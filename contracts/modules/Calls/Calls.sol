@@ -11,7 +11,6 @@ pragma solidity 0.8.23;
 
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { ICalls, CallsStructs } from "contracts/interfaces/ICalls.sol";
-import { CallsStructs } from "./CallsStructs.sol";
 import { Controllers } from "../Controllers/Controllers.sol";
 
 abstract contract Calls is ICalls, Initializable, Controllers {
