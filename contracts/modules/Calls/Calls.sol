@@ -33,10 +33,11 @@ abstract contract Calls is ICalls, Initializable, Controllers {
      */
     function call(
         CallsStructs.CallRequest calldata _callRequest,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_callRequest, block.chainid)), _signatures)
+        meetsControllersThreshold(keccak256(abi.encode(_callRequest, _deadline, block.chainid)), _deadline, _signatures)
         returns (bytes memory)
     {
         return _call(_callRequest);
@@ -49,10 +50,11 @@ abstract contract Calls is ICalls, Initializable, Controllers {
      */
     function multiCall(
         CallsStructs.CallRequest[] calldata _callRequests,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_callRequests, block.chainid)), _signatures)
+        meetsControllersThreshold(keccak256(abi.encode(_callRequests, _deadline, block.chainid)), _deadline, _signatures)
         returns (bytes[] memory)
     {
         bytes[] memory results = new bytes[](_callRequests.length);

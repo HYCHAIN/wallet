@@ -35,6 +35,8 @@ contract UUPSUpgradesTest is TestBase {
     bytes32 _wallet1Salt = keccak256(bytes("_wallet1"));
     bytes32 _wallet2Salt = keccak256(bytes("_wallet2"));
 
+    uint256 _deadline = 9999999;
+
     function setUp() public {
         _factory = new WalletProxyFactory(address(new MainImpl()));
         _wallet1 = MainImpl(payable(_factory.createProxy(_wallet1Salt)));
@@ -61,7 +63,10 @@ contract UUPSUpgradesTest is TestBase {
         _newWallet.upgradeToAndCall(
             address(_newImpl),
             "",
-            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(address(_newImpl), "", block.chainid))))
+            arraySingle(
+                signHashAsMessage(signingPK, keccak256(abi.encode(address(_newImpl), "", _deadline, block.chainid)))
+            ),
+            _deadline
         );
         assertTrue(_newWallet.isNew());
         // other deployed proxies are unchanged
@@ -78,7 +83,10 @@ contract UUPSUpgradesTest is TestBase {
         _newWallet.upgradeToAndCall(
             address(_newImpl),
             "",
-            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(address(_newImpl), "", block.chainid))))
+            arraySingle(
+                signHashAsMessage(signingPK, keccak256(abi.encode(address(_newImpl), "", _deadline, block.chainid)))
+            ),
+            _deadline
         );
     }
 
@@ -88,6 +96,6 @@ contract UUPSUpgradesTest is TestBase {
         MainImplNew _newImpl = new MainImplNew();
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _newWallet.upgradeToAndCall(address(_newImpl), "", new bytes[](0));
+        _newWallet.upgradeToAndCall(address(_newImpl), "", new bytes[](0), _deadline);
     }
 }

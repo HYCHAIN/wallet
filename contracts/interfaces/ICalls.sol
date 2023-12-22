@@ -14,11 +14,13 @@ import "contracts/modules/Calls/CallsStructs.sol";
 interface ICalls {
     function call(
         CallsStructs.CallRequest calldata _callRequest,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     ) external returns (bytes memory);
 
     function multiCall(
         CallsStructs.CallRequest[] calldata _callRequests,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     ) external returns (bytes[] memory);
 }

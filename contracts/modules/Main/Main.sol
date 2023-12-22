@@ -65,13 +65,18 @@ contract Main is
     function upgradeToAndCall(
         address newImplementation,
         bytes calldata data,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
         payable
         virtual
         onlyProxy
-        meetsControllersThreshold(keccak256(abi.encode(newImplementation, data, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(newImplementation, data, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         MainStorage.layout().canUpgrade = true;
         upgradeToAndCall(newImplementation, data);

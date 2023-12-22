@@ -17,6 +17,7 @@ import { ControllersStorage } from "./ControllersStorage.sol";
 
 abstract contract Controllers is Initializable, IControllers, ERC165 {
     error InvalidThreshold();
+    error DeadlineReached();
     error ThresholdImpossible();
     error ControllersNotInitialized();
     error ControllerDoesNotExist();
@@ -48,10 +49,15 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         address[] calldata _controllers,
         uint256[] calldata _weights,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_controllers, _weights, _nonce, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(_controllers, _weights, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         if (_controllers.length != _weights.length) {
             revert ArraryLengthMismatch();
@@ -60,10 +66,11 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
             revert InvalidParameters();
         }
         for (uint256 i = 0; i < _controllers.length; i++) {
-            if (ControllersStorage.layout().weights[_controllers[i]] != 0) {
+            address _controller = _controllers[i];
+            if (ControllersStorage.layout().weights[_controller] != 0) {
                 revert ControllerAlreadyExists();
             }
-            _addController(_controllers[i], _weights[i]);
+            _addController(_controller, _weights[i]);
         }
     }
 
@@ -78,10 +85,15 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         address[] calldata _controllers,
         uint256 _newThreshold,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_controllers, _newThreshold, _nonce, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(_controllers, _newThreshold, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         if (_controllers.length == 0) {
             revert InvalidParameters();
@@ -99,10 +111,15 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         address _controllerOld,
         address _controllerNew,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_controllerOld, _controllerNew, _nonce, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(_controllerOld, _controllerNew, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         if (ControllersStorage.layout().weights[_controllerOld] == 0) {
             revert ControllerDoesNotExist();
@@ -124,8 +141,16 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     function updateControlThreshold(
         uint256 _threshold,
         uint256 _nonce,
-        bytes[] calldata _signatures
-    ) external meetsControllersThreshold(keccak256(abi.encode(_threshold, _nonce, block.chainid)), _signatures) {
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    )
+        external
+        meetsControllersThreshold(
+            keccak256(abi.encode(_threshold, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
+    {
         _updateThreshold(_threshold);
     }
 
@@ -140,10 +165,15 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         address _controller,
         uint256 _weight,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_controller, _weight, _nonce, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(_controller, _weight, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         ControllersStorage.layout().totalWeights =
             ControllersStorage.layout().totalWeights - ControllersStorage.layout().weights[_controller] + _weight;
@@ -245,7 +275,28 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         return (true, "");
     }
 
-    modifier meetsControllersThreshold(bytes32 _inputHash, bytes[] calldata _signatures) {
+    modifier meetsControllersThresholdBytes(bytes memory _inputBytes, uint256 _deadline, bytes[] calldata _signatures) {
+        if (_deadline < block.timestamp) {
+            revert DeadlineReached();
+        }
+        if (ControllersStorage.layout().threshold == 0) {
+            revert ControllersNotInitialized();
+        }
+        (bool verified, string memory error) =
+            _verifyControllersThresholdBySignatures(keccak256(_inputBytes), _signatures);
+        require(verified, error);
+
+        for (uint256 i = 0; i < _signatures.length; i++) {
+            ControllersStorage.layout().usedSignatures[keccak256(_signatures[i])] = true;
+        }
+
+        _;
+    }
+
+    modifier meetsControllersThreshold(bytes32 _inputHash, uint256 _deadline, bytes[] calldata _signatures) {
+        if (_deadline < block.timestamp) {
+            revert DeadlineReached();
+        }
         if (ControllersStorage.layout().threshold == 0) {
             revert ControllersNotInitialized();
         }

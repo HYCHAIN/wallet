@@ -54,16 +54,17 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         SessionCallsStructs.SessionRequest calldata _sessionRequest,
         uint256 _expiresAt,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(
-            keccak256(abi.encode(_caller, _sessionRequest, _expiresAt, _nonce, block.chainid)),
+        meetsControllersThresholdBytes(
+            abi.encode(_caller, _sessionRequest, _expiresAt, _nonce, _deadline, block.chainid),
+            _deadline,
             _signatures
         )
     {
-        SessionCallsStructs.Session storage session =
-            SessionCallsStorage.layout().sessions[_caller][SessionCallsStorage.layout().nextSessionId[_caller]];
+        SessionCallsStructs.Session storage session = _getSession(_caller);
 
         session.expiresAt = _expiresAt;
 
@@ -71,39 +72,13 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         // See {SessionCallsStructs.Session} for more info.
         session.allowances[address(0)][0] = _sessionRequest.nativeAllowance;
 
-        for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
-            for (uint256 j = 0; j < _sessionRequest.contractFunctionSelectors[i].functionSelectors.length; j++) {
-                session.contractFunctionSelectors[_sessionRequest.contractFunctionSelectors[i].aContract][_sessionRequest
-                    .contractFunctionSelectors[i].functionSelectors[j]] = true;
-            }
-        }
+        _setFuncSelectors(_sessionRequest, session);
 
-        for (uint256 i = 0; i < _sessionRequest.erc20Allowances.length; i++) {
-            session.allowances[_sessionRequest.erc20Allowances[i].erc20Contract][0] =
-                _sessionRequest.erc20Allowances[i].allowance;
-        }
+        _setErc20Allowances(_sessionRequest, session);
 
-        for (uint256 i = 0; i < _sessionRequest.erc721Allowances.length; i++) {
-            if (_sessionRequest.erc721Allowances[i].approveAll) {
-                session.approveAlls[_sessionRequest.erc721Allowances[i].erc721Contract] = true;
-            } else {
-                for (uint256 j = 0; j < _sessionRequest.erc721Allowances[i].tokenIds.length; j++) {
-                    session.allowances[_sessionRequest.erc721Allowances[i].erc721Contract][_sessionRequest
-                        .erc721Allowances[i].tokenIds[j]] = 1;
-                }
-            }
-        }
+        _setErc721Allowances(_sessionRequest, session);
 
-        for (uint256 i = 0; i < _sessionRequest.erc1155Allowances.length; i++) {
-            if (_sessionRequest.erc1155Allowances[i].approveAll) {
-                session.approveAlls[_sessionRequest.erc1155Allowances[i].erc1155Contract] = true;
-            } else {
-                for (uint256 j = 0; j < _sessionRequest.erc1155Allowances[i].tokenIds.length; j++) {
-                    session.allowances[_sessionRequest.erc1155Allowances[i].erc1155Contract][_sessionRequest
-                        .erc1155Allowances[i].tokenIds[j]] = _sessionRequest.erc1155Allowances[i].allowances[j];
-                }
-            }
-        }
+        _setErc1155Allowances(_sessionRequest, session);
 
         SessionCallsStorage.layout().nextSessionId[_caller]++;
     }
@@ -124,8 +99,12 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
     function endSessionForCaller(
         address _caller,
         uint256 _nonce,
-        bytes[] calldata _signatures
-    ) external meetsControllersThreshold(keccak256(abi.encode(_caller, _nonce, block.chainid)), _signatures) {
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    )
+        external
+        meetsControllersThreshold(keccak256(abi.encode(_caller, _nonce, _deadline, block.chainid)), _deadline, _signatures)
+    {
         _endSessionForCaller(_caller);
     }
 
@@ -431,5 +410,63 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         (bool _success, bytes memory _returnData) =
             _targetContract.staticcall(abi.encodeCall(IERC165.supportsInterface, (_interfaceId)));
         isSupported_ = _success && abi.decode(_returnData, (bool));
+    }
+
+    function _getSession(address _user) internal view returns (SessionCallsStructs.Session storage) {
+        return SessionCallsStorage.layout().sessions[_user][SessionCallsStorage.layout().nextSessionId[_user]];
+    }
+
+    function _setFuncSelectors(
+        SessionCallsStructs.SessionRequest calldata _sessionRequest,
+        SessionCallsStructs.Session storage session
+    ) internal {
+        for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
+            for (uint256 j = 0; j < _sessionRequest.contractFunctionSelectors[i].functionSelectors.length; j++) {
+                session.contractFunctionSelectors[_sessionRequest.contractFunctionSelectors[i].aContract][_sessionRequest
+                    .contractFunctionSelectors[i].functionSelectors[j]] = true;
+            }
+        }
+    }
+
+    function _setErc20Allowances(
+        SessionCallsStructs.SessionRequest calldata _sessionRequest,
+        SessionCallsStructs.Session storage session
+    ) internal {
+        for (uint256 i = 0; i < _sessionRequest.erc20Allowances.length; i++) {
+            session.allowances[_sessionRequest.erc20Allowances[i].erc20Contract][0] =
+                _sessionRequest.erc20Allowances[i].allowance;
+        }
+    }
+
+    function _setErc721Allowances(
+        SessionCallsStructs.SessionRequest calldata _sessionRequest,
+        SessionCallsStructs.Session storage session
+    ) internal {
+        for (uint256 i = 0; i < _sessionRequest.erc721Allowances.length; i++) {
+            if (_sessionRequest.erc721Allowances[i].approveAll) {
+                session.approveAlls[_sessionRequest.erc721Allowances[i].erc721Contract] = true;
+            } else {
+                for (uint256 j = 0; j < _sessionRequest.erc721Allowances[i].tokenIds.length; j++) {
+                    session.allowances[_sessionRequest.erc721Allowances[i].erc721Contract][_sessionRequest
+                        .erc721Allowances[i].tokenIds[j]] = 1;
+                }
+            }
+        }
+    }
+
+    function _setErc1155Allowances(
+        SessionCallsStructs.SessionRequest calldata _sessionRequest,
+        SessionCallsStructs.Session storage session
+    ) internal {
+        for (uint256 i = 0; i < _sessionRequest.erc1155Allowances.length; i++) {
+            if (_sessionRequest.erc1155Allowances[i].approveAll) {
+                session.approveAlls[_sessionRequest.erc1155Allowances[i].erc1155Contract] = true;
+            } else {
+                for (uint256 j = 0; j < _sessionRequest.erc1155Allowances[i].tokenIds.length; j++) {
+                    session.allowances[_sessionRequest.erc1155Allowances[i].erc1155Contract][_sessionRequest
+                        .erc1155Allowances[i].tokenIds[j]] = _sessionRequest.erc1155Allowances[i].allowances[j];
+                }
+            }
+        }
     }
 }

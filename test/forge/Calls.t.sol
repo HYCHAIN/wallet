@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { TestBase } from "./utils/TestBase.sol";
 
-import { Calls, CallsStructs } from "contracts/modules/Calls/Calls.sol";
+import { Calls, CallsStructs, Controllers } from "contracts/modules/Calls/Calls.sol";
 
 import "forge-std/console.sol";
 
@@ -27,6 +27,8 @@ contract CallsTest is TestBase {
     CallsImpl _calls;
     Counter _counter;
 
+    uint256 _deadline = 9999999;
+
     function setUp() public {
         _calls = CallsImpl(proxify(address(new CallsImpl())));
         _calls.initialize(signingAuthority);
@@ -40,10 +42,10 @@ contract CallsTest is TestBase {
         _callReqs[0] = _callReq;
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _calls.call(_callReq, new bytes[](0));
+        _calls.call(_callReq, new bytes[](0), _deadline);
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _calls.multiCall(_callReqs, new bytes[](0));
+        _calls.multiCall(_callReqs, new bytes[](0), _deadline);
     }
 
     function testRevertTransferInsufficientFundsWithConsensus() public {
@@ -53,7 +55,11 @@ contract CallsTest is TestBase {
         assertEq(0, leet.balance);
 
         vm.expectRevert("Insufficient funds to transfer");
-        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+        _calls.call(
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
+        );
     }
 
     function testAllowTransferFundsWithConsensus() public {
@@ -63,10 +69,18 @@ contract CallsTest is TestBase {
         assertEq(3 ether, address(_calls).balance);
         assertEq(0, leet.balance);
 
-        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+        _calls.call(
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
+        );
 
         vm.expectRevert("At least one signature already used");
-        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+        _calls.call(
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
+        );
 
         assertEq(2 ether, address(_calls).balance);
         assertEq(1 ether, leet.balance);
@@ -77,12 +91,16 @@ contract CallsTest is TestBase {
         assertEq(0, alice.balance);
 
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
 
         vm.expectRevert("At least one signature already used");
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
 
         assertEq(0.5 ether, address(_calls).balance);
@@ -99,10 +117,18 @@ contract CallsTest is TestBase {
         });
         assertEq(0, _counter.count());
 
-        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+        _calls.call(
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
+        );
 
         vm.expectRevert("At least one signature already used");
-        _calls.call(_callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid)))));
+        _calls.call(
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
+        );
 
         assertEq(1, _counter.count());
 
@@ -116,12 +142,16 @@ contract CallsTest is TestBase {
         });
 
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
 
         vm.expectRevert("At least one signature already used");
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
 
         assertEq(10, _counter.count());
@@ -144,7 +174,9 @@ contract CallsTest is TestBase {
         assertEq(0, leet.balance);
 
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
 
         assertEq(1 ether, address(_calls).balance);
@@ -154,7 +186,35 @@ contract CallsTest is TestBase {
 
         vm.expectRevert("At least one signature already used");
         _calls.multiCall(
-            _callReqs, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.chainid))))
+            _callReqs,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, _deadline, block.chainid)))),
+            _deadline
         );
+    }
+
+    function testDeadlineReachedReverts() public {
+        CallsStructs.CallRequest[] memory _callReqs = new CallsStructs.CallRequest[](3);
+        _callReqs[0] = CallsStructs.CallRequest({ target: leet, value: 1 ether, data: "", nonce: 1 });
+        _callReqs[1] = CallsStructs.CallRequest({
+            target: address(_counter),
+            value: 0,
+            data: abi.encodeWithSelector(Counter.increment.selector, 100),
+            nonce: 1
+        });
+        _callReqs[2] = CallsStructs.CallRequest({ target: alice, value: 1 ether, data: "", nonce: 1 });
+        bytes[] memory _sigs = arraySingle(
+            signHashAsMessage(signingPK, keccak256(abi.encode(_callReqs, block.timestamp - 1, block.chainid)))
+        );
+        vm.expectRevert(Controllers.DeadlineReached.selector);
+        _calls.multiCall(_callReqs, _sigs, block.timestamp - 1);
+
+        CallsStructs.CallRequest memory _callReq =
+            CallsStructs.CallRequest({ target: leet, value: 1 ether, data: "", nonce: 1 });
+
+        _sigs = arraySingle(
+            signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.timestamp - 1, block.chainid)))
+        );
+        vm.expectRevert(Controllers.DeadlineReached.selector);
+        _calls.call(_callReq, _sigs, block.timestamp - 1);
     }
 }

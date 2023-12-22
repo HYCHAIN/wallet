@@ -17,13 +17,15 @@ interface IPreauthorizedCalls is ICalls {
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         PreauthorizedCallsStructs.CallRequestPreauthorization calldata _callRequestPreauthorization,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     ) external;
 
     function unauthorizeCall(
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     ) external;
 
     function preauthorizedCall(CallsStructs.CallRequest calldata _callRequest) external returns (bytes memory);

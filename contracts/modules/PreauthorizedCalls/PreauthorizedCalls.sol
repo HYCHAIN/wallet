@@ -31,26 +31,28 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         PreauthorizedCallsStructs.CallRequestPreauthorization calldata _callRequestPreauthorization,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
         meetsControllersThreshold(
-            keccak256(abi.encode(_callRequestPreauthorized, _callRequestPreauthorization, _nonce, block.chainid)),
+            keccak256(abi.encode(_callRequestPreauthorized, _callRequestPreauthorization, _nonce, _deadline, block.chainid)),
+            _deadline,
             _signatures
         )
     {
         if (_callRequestPreauthorization.maxCalls == 0) {
             revert MaxCallsMustNotBeZero();
         }
-
-        PreauthorizedCallsStorage.layout().callRequestPreauthorizations[keccak256(
+        bytes32 _key = keccak256(
             abi.encode(
                 _callRequestPreauthorized.caller,
                 _callRequestPreauthorized.target,
                 _callRequestPreauthorized.value,
                 _callRequestPreauthorized.data
             )
-        )] = _callRequestPreauthorization;
+        );
+        PreauthorizedCallsStorage.layout().callRequestPreauthorizations[_key] = _callRequestPreauthorization;
     }
 
     /**
@@ -62,10 +64,15 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
     function unauthorizeCall(
         PreauthorizedCallsStructs.CallRequestPreauthorized calldata _callRequestPreauthorized,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     )
         external
-        meetsControllersThreshold(keccak256(abi.encode(_callRequestPreauthorized, _nonce, block.chainid)), _signatures)
+        meetsControllersThreshold(
+            keccak256(abi.encode(_callRequestPreauthorized, _nonce, _deadline, block.chainid)),
+            _deadline,
+            _signatures
+        )
     {
         delete PreauthorizedCallsStorage.layout().callRequestPreauthorizations[
       keccak256(

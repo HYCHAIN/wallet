@@ -18,10 +18,16 @@ interface ISessionCalls is ICalls {
         SessionCallsStructs.SessionRequest calldata _sessionRequest,
         uint256 _expiresAt,
         uint256 _nonce,
-        bytes[] calldata _signatures
+        bytes[] calldata _signatures,
+        uint256 _deadline
     ) external;
 
-    function endSessionForCaller(address _caller, uint256 _nonce, bytes[] calldata _signatures) external;
+    function endSessionForCaller(
+        address _caller,
+        uint256 _nonce,
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    ) external;
 
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) external returns (bytes memory);
 

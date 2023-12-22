@@ -69,6 +69,8 @@ contract SessionCallsTest is TestBase {
     bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
         bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
 
+    uint256 _deadline = 9999999;
+
     SessionCallsImpl _calls;
     RandomContract _contract;
 
@@ -90,37 +92,51 @@ contract SessionCallsTest is TestBase {
         SessionCallsStructs.SessionRequest memory req = createEmptySessionRequest();
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _calls.startSession(leet, req, exp, nonceCur, new bytes[](0));
+        _calls.startSession(leet, req, exp, nonceCur, new bytes[](0), _deadline);
 
-        startSession(address(_calls), signingPK, leet, req, exp, ++nonceCur);
+        startSession(address(_calls), signingPK, leet, req, exp, ++nonceCur, _deadline);
 
         assertTrue(_calls.hasActiveSession(leet));
     }
 
     function testAllowEndingActiveSessionWithConsensus() public {
         startSession(
-            address(_calls), signingPK, leet, createEmptySessionRequest(), (block.timestamp + 1 days), ++nonceCur
+            address(_calls),
+            signingPK,
+            leet,
+            createEmptySessionRequest(),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
         );
 
         vm.expectRevert("Signer weights does not meet threshold");
-        _calls.endSessionForCaller(leet, nonceCur, new bytes[](0));
+        _calls.endSessionForCaller(leet, nonceCur, new bytes[](0), _deadline);
 
-        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, block.chainid)));
-        _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig));
+        bytes memory sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, _deadline, block.chainid)));
+        _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig), _deadline);
 
         assertFalse(_calls.hasActiveSession(leet));
     }
 
     function testRevertEndingNonexistentSession() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, block.chainid)));
+        bytes memory sig =
+            signHashAsMessage(signingPK, keccak256(abi.encode(leet, ++nonceCur, _deadline, block.chainid)));
 
         vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, leet));
-        _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig));
+        _calls.endSessionForCaller(leet, nonceCur, arraySingle(sig), _deadline);
     }
 
     function testAllowDelegateEndSession() public {
         startSession(
-            address(_calls), signingPK, leet, createEmptySessionRequest(), (block.timestamp + 1 days), ++nonceCur
+            address(_calls),
+            signingPK,
+            leet,
+            createEmptySessionRequest(),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
         );
 
         vm.prank(leet);
@@ -151,7 +167,7 @@ contract SessionCallsTest is TestBase {
     function testRevertSessionExpired() public {
         uint256 exp = (block.timestamp + 1 hours);
         SessionCallsStructs.SessionRequest memory req = createEmptySessionRequest();
-        startSession(address(_calls), signingPK, leet, req, exp, ++nonceCur);
+        startSession(address(_calls), signingPK, leet, req, exp, ++nonceCur, _deadline);
 
         assertTrue(_calls.hasActiveSession(leet));
         vm.warp(exp + 1);
@@ -180,7 +196,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc20), 1 ether, address(_erc20), ERC20MockDecimals.transfer.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         // Make call for unrelated function on erc20 contract
@@ -233,7 +250,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createGasSpendSessionRequest(1 ether, address(_contract), RandomContract.spend.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(10 ether, address(_calls).balance);
@@ -261,7 +279,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
         vm.prank(leet);
         _calls.sessionCall(_callReq);
@@ -283,7 +302,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](2);
@@ -308,7 +328,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createGasSpendSessionRequest(0.5 ether, address(_contract), RandomContract.spend.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         vm.expectRevert(
@@ -326,7 +347,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_erc20), ERC20MockDecimals.approve.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
         CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
             target: address(_erc20),
@@ -343,7 +365,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_contract), RandomContract.spendERC20.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(10 ether, _erc20.balanceOf(address(_calls)));
@@ -376,7 +399,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc20), 1 ether, address(_erc20), ERC20MockDecimals.transfer.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(10 ether, _erc20.balanceOf(address(_calls)));
@@ -410,7 +434,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_erc20), ERC20MockDecimals.approve.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
         _callReq = CallsStructs.CallRequest({
             target: address(_erc20),
@@ -430,7 +455,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc20), 1 ether, address(_erc20), ERC20MockDecimals.transferFrom.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         _callReq = CallsStructs.CallRequest({
@@ -528,7 +554,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc1155), _testTokenId, 2, address(_erc1155), ERC1155Mock.safeTransferFrom.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(10, _erc1155.balanceOf(address(_calls), _testTokenId));
@@ -573,7 +600,8 @@ contract SessionCallsTest is TestBase {
                 ERC1155Mock.safeBatchTransferFrom.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         _callReq = CallsStructs.CallRequest({
@@ -617,7 +645,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_erc1155), ERC1155Mock.setApprovalForAll.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
         CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
             target: address(_erc1155),
@@ -634,7 +663,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_contract), RandomContract.transferERC1155.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(10, _erc1155.balanceOf(address(_calls), _testTokenId));
@@ -676,7 +706,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc721), _testTokenId, address(_erc721), ERC721Mock.transferFrom.selector
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
@@ -728,7 +759,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc721), _testTokenId, address(_erc721), SAFE_TRANSFER_FROM_SELECTOR1
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
@@ -780,7 +812,8 @@ contract SessionCallsTest is TestBase {
                 address(_erc721), _testTokenId, address(_erc721), SAFE_TRANSFER_FROM_SELECTOR2
             ),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
@@ -834,7 +867,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_erc721), ERC721Mock.setApprovalForAll.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
         CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
             target: address(_erc721),
@@ -851,7 +885,8 @@ contract SessionCallsTest is TestBase {
             leet,
             createRestrictedSessionRequest(address(_contract), RandomContract.transferERC721.selector),
             (block.timestamp + 1 days),
-            ++nonceCur
+            ++nonceCur,
+            _deadline
         );
 
         assertEq(address(_calls), _erc721.ownerOf(_testTokenId));

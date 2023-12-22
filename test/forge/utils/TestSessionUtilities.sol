@@ -208,10 +208,12 @@ abstract contract TestSessionUtilities is TestUtilities {
         address delegateAddress,
         SessionCallsStructs.SessionRequest memory req,
         uint256 exp,
-        uint256 nonce
+        uint256 nonce,
+        uint256 _deadline
     ) internal {
-        bytes memory sig =
-            signHashAsMessage(signingPK, keccak256(abi.encode(delegateAddress, req, exp, nonce, block.chainid)));
-        SessionCalls(sessionCalls).startSession(delegateAddress, req, exp, nonce, arraySingle(sig));
+        bytes memory sig = signHashAsMessage(
+            signingPK, keccak256(abi.encode(delegateAddress, req, exp, nonce, _deadline, block.chainid))
+        );
+        SessionCalls(sessionCalls).startSession(delegateAddress, req, exp, nonce, arraySingle(sig), 9999999);
     }
 }

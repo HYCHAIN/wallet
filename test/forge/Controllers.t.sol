@@ -15,8 +15,15 @@ contract ControllersImpl is Controllers {
 
     function doSomethingWithConsensus(bytes[] calldata _signatures)
         external
-        meetsControllersThreshold(keccak256(abi.encode(block.chainid)), _signatures)
+        meetsControllersThreshold(keccak256(abi.encode(block.chainid)), 99999999, _signatures)
     {
+        didSomething = true;
+    }
+
+    function doSomethingWithConsensus(
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    ) external meetsControllersThreshold(keccak256(abi.encode(block.chainid)), _deadline, _signatures) {
         didSomething = true;
     }
 }
@@ -29,6 +36,8 @@ contract ControllersTest is TestBase {
     uint256 internal defaultNonce = 1;
     uint256 internal nonceCur = 2;
 
+    uint256 _deadline = 9999999;
+
     function setUp() public {
         _controllers = ControllersImpl(proxify(address(new ControllersImpl())));
         _controllers.initialize(signingAuthority);
@@ -37,10 +46,14 @@ contract ControllersTest is TestBase {
     function _addController(address _addr) internal {
         bytes memory sig = signHashAsMessage(
             signingPK,
-            keccak256(abi.encode(arraySingle(_addr), arraySingle(defaultControllerWeight), ++nonceCur, block.chainid))
+            keccak256(
+                abi.encode(
+                    arraySingle(_addr), arraySingle(defaultControllerWeight), ++nonceCur, _deadline, block.chainid
+                )
+            )
         );
         _controllers.addControllers(
-            arraySingle(_addr), arraySingle(defaultControllerWeight), nonceCur, arraySingle(sig)
+            arraySingle(_addr), arraySingle(defaultControllerWeight), nonceCur, arraySingle(sig), _deadline
         );
     }
 
@@ -49,10 +62,10 @@ contract ControllersTest is TestBase {
         vm.expectRevert(Controllers.ControllersNotInitialized.selector);
         controller.doSomethingWithConsensus(new bytes[](0));
         vm.expectRevert(Controllers.ControllersNotInitialized.selector);
-        controller.updateControlThreshold(defaultThreshold, 0, new bytes[](0));
+        controller.updateControlThreshold(defaultThreshold, 0, new bytes[](0), _deadline);
         vm.expectRevert(Controllers.ControllersNotInitialized.selector);
         controller.addControllers(
-            arraySingle(deployer), arraySingle(defaultControllerWeight), defaultNonce, new bytes[](0)
+            arraySingle(deployer), arraySingle(defaultControllerWeight), defaultNonce, new bytes[](0), _deadline
         );
     }
 
@@ -78,9 +91,10 @@ contract ControllersTest is TestBase {
 
     function testRevertRunTxPartialConsensus() public {
         _addController(deployer);
-        bytes memory sigThreshold =
-            signHashAsMessage(signingPK, keccak256(abi.encode(defaultThreshold + 1, ++nonceCur, block.chainid)));
-        _controllers.updateControlThreshold(defaultThreshold + 1, nonceCur, arraySingle(sigThreshold));
+        bytes memory sigThreshold = signHashAsMessage(
+            signingPK, keccak256(abi.encode(defaultThreshold + 1, ++nonceCur, _deadline, block.chainid))
+        );
+        _controllers.updateControlThreshold(defaultThreshold + 1, nonceCur, arraySingle(sigThreshold), _deadline);
         bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(block.chainid)));
 
         vm.expectRevert("Signer weights does not meet threshold");
@@ -89,19 +103,20 @@ contract ControllersTest is TestBase {
 
     function testAllowRemoveController() public {
         bytes memory sig = signHashAsMessage(
-            signingPK, keccak256(abi.encode(arraySingle(alice), arraySingle(19), ++nonceCur, block.chainid))
+            signingPK, keccak256(abi.encode(arraySingle(alice), arraySingle(19), ++nonceCur, _deadline, block.chainid))
         );
-        _controllers.addControllers(arraySingle(alice), arraySingle(19), nonceCur, arraySingle(sig));
+        _controllers.addControllers(arraySingle(alice), arraySingle(19), nonceCur, arraySingle(sig), _deadline);
         _addController(deployer);
 
         assertEq(1, _controllers.controlThreshold());
 
-        sig =
-            signHashAsMessage(signingPK, keccak256(abi.encode(arraySingle(deployer), 20, defaultNonce, block.chainid)));
+        sig = signHashAsMessage(
+            signingPK, keccak256(abi.encode(arraySingle(deployer), 20, defaultNonce, _deadline, block.chainid))
+        );
 
         assertEq(1, _controllers.controllerWeight(deployer));
 
-        _controllers.removeControllers(arraySingle(deployer), 20, defaultNonce, arraySingle(sig));
+        _controllers.removeControllers(arraySingle(deployer), 20, defaultNonce, arraySingle(sig), _deadline);
 
         assertEq(0, _controllers.controllerWeight(deployer));
         // ensure new threshold was set
@@ -111,41 +126,44 @@ contract ControllersTest is TestBase {
     function testReplaceController() public {
         _addController(deployer);
         bytes memory sig =
-            signHashAsMessage(signingPK, keccak256(abi.encode(deployer, alice, defaultNonce, block.chainid)));
+            signHashAsMessage(signingPK, keccak256(abi.encode(deployer, alice, defaultNonce, _deadline, block.chainid)));
 
         assertEq(2, _controllers.controllersTotalWeight());
         assertEq(1, _controllers.controllerWeight(deployer));
         assertEq(0, _controllers.controllerWeight(alice));
         assertEq(1, _controllers.controlThreshold());
 
-        _controllers.replaceController(deployer, alice, defaultNonce, arraySingle(sig));
+        _controllers.replaceController(deployer, alice, defaultNonce, arraySingle(sig), _deadline);
 
         assertEq(2, _controllers.controllersTotalWeight());
         assertEq(0, _controllers.controllerWeight(deployer));
         assertEq(1, _controllers.controllerWeight(alice));
         assertEq(1, _controllers.controlThreshold());
 
-        sig = signHashAsMessage(signingPK, keccak256(abi.encode(deployer, alice, defaultNonce + 1, block.chainid)));
+        sig = signHashAsMessage(
+            signingPK, keccak256(abi.encode(deployer, alice, defaultNonce + 1, _deadline, block.chainid))
+        );
 
         vm.expectRevert(Controllers.ControllerDoesNotExist.selector);
-        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig));
+        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig), _deadline);
 
         _addController(deployer);
 
         vm.expectRevert(Controllers.ControllerAlreadyExists.selector);
-        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig));
+        _controllers.replaceController(deployer, alice, defaultNonce + 1, arraySingle(sig), _deadline);
     }
 
     function testAllowUpdateControllerWeight() public {
         uint256 newWeight = 2;
         _addController(deployer);
         uint256 totalWeight = _controllers.controllersTotalWeight();
-        bytes memory sig =
-            signHashAsMessage(signingPK, keccak256(abi.encode(deployer, newWeight, defaultNonce, block.chainid)));
+        bytes memory sig = signHashAsMessage(
+            signingPK, keccak256(abi.encode(deployer, newWeight, defaultNonce, _deadline, block.chainid))
+        );
 
         assertEq(defaultControllerWeight, _controllers.controllerWeight(deployer));
 
-        _controllers.updateControllerWeight(deployer, newWeight, defaultNonce, arraySingle(sig));
+        _controllers.updateControllerWeight(deployer, newWeight, defaultNonce, arraySingle(sig), _deadline);
 
         assertEq(newWeight, _controllers.controllerWeight(deployer));
         assertEq(totalWeight + (newWeight - defaultControllerWeight), _controllers.controllersTotalWeight());
@@ -171,8 +189,8 @@ contract ControllersTest is TestBase {
         }
 
         bytes memory sigThreshold =
-            signHashAsMessage(signingPK, keccak256(abi.encode(_threshold, ++nonceCur, block.chainid)));
-        _controllers.updateControlThreshold(_threshold, nonceCur, arraySingle(sigThreshold));
+            signHashAsMessage(signingPK, keccak256(abi.encode(_threshold, ++nonceCur, _deadline, block.chainid)));
+        _controllers.updateControlThreshold(_threshold, nonceCur, arraySingle(sigThreshold), _deadline);
 
         bytes[] memory sigs = new bytes[](_threshold);
 
@@ -181,5 +199,11 @@ contract ControllersTest is TestBase {
         }
 
         _controllers.doSomethingWithConsensus(sigs);
+    }
+
+    function testDeadlinePassedReverts() public {
+        bytes memory sig = signHashAsMessage(signingPK, keccak256(abi.encode(block.chainid)));
+        vm.expectRevert(Controllers.DeadlineReached.selector);
+        _controllers.doSomethingWithConsensus(arraySingle(sig), block.timestamp - 1);
     }
 }

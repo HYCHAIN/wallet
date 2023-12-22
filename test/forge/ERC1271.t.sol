@@ -20,6 +20,8 @@ contract ERC1271Test is TestBase {
 
     SCA _sca;
 
+    uint256 _deadline = 9999999;
+
     function setUp() public {
         _sca = SCA(proxify(address(new SCA())));
         _sca.initialize(signingAuthority);
@@ -47,22 +49,24 @@ contract ERC1271Test is TestBase {
         address _signingPK2Addr = vm.addr(_signingPK2);
 
         bytes memory _sig = signHashAsMessage(
-            signingPK, keccak256(abi.encode(arraySingle(deployer), arraySingle(_weight), _nonce, block.chainid))
+            signingPK,
+            keccak256(abi.encode(arraySingle(deployer), arraySingle(_weight), _nonce, _deadline, block.chainid))
         );
 
         // Add deployer as controller
-        _sca.addControllers(arraySingle(deployer), arraySingle(_weight), _nonce, arraySingle(_sig));
+        _sca.addControllers(arraySingle(deployer), arraySingle(_weight), _nonce, arraySingle(_sig), _deadline);
 
         // Add _signingPK2 as controller
         _sig = signHashAsMessage(
-            signingPK, keccak256(abi.encode(arraySingle(_signingPK2Addr), arraySingle(_weight), _nonce, block.chainid))
+            signingPK,
+            keccak256(abi.encode(arraySingle(_signingPK2Addr), arraySingle(_weight), _nonce, _deadline, block.chainid))
         );
-        _sca.addControllers(arraySingle(_signingPK2Addr), arraySingle(_weight), _nonce, arraySingle(_sig));
+        _sca.addControllers(arraySingle(_signingPK2Addr), arraySingle(_weight), _nonce, arraySingle(_sig), _deadline);
 
         // Total weight should be 3, so we want 2 signatures to pass
         uint256 _newThreshold = 2;
-        _sig = signHashAsMessage(signingPK, keccak256(abi.encode(_newThreshold, _nonce, block.chainid)));
-        _sca.updateControlThreshold(_newThreshold, _nonce, arraySingle(_sig));
+        _sig = signHashAsMessage(signingPK, keccak256(abi.encode(_newThreshold, _nonce, _deadline, block.chainid)));
+        _sca.updateControlThreshold(_newThreshold, _nonce, arraySingle(_sig), _deadline);
         assertEq(_sca.controlThreshold(), _newThreshold);
 
         bytes32 _hash = keccak256(abi.encode("I am a super cool message"));

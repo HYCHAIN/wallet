@@ -29,6 +29,8 @@ contract MainTest is TestBase {
     bytes32 _wallet1Salt = keccak256(bytes("_wallet1"));
     UpgradeableBeacon _beacon;
 
+    uint256 _deadline = 9999999;
+
     function setUp() public {
         _factory = new BeaconProxyFactory(address(new MainImpl()));
         vm.prank(signingAuthority);
@@ -45,7 +47,9 @@ contract MainTest is TestBase {
 
         vm.expectRevert("Insufficient funds to transfer");
         _wallet1.call(
-            _callReq, arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, block.chainid))))
+            _callReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
+            _deadline
         );
     }
 
