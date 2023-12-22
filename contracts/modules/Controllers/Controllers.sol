@@ -52,6 +52,9 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         meetsControllersThreshold(keccak256(abi.encode(_controllers, _weights, _nonce, block.chainid)), _signatures)
     {
         for (uint256 i = 0; i < _controllers.length; i++) {
+            if (ControllersStorage.layout().weights[_controllers[i]] != 0) {
+                revert ControllerAlreadyExists();
+            }
             _addController(_controllers[i], _weights[i]);
         }
     }
