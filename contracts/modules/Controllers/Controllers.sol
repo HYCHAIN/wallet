@@ -21,6 +21,7 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
     error ControllersNotInitialized();
     error ControllerDoesNotExist();
     error ControllerAlreadyExists();
+    error ArraryLengthMismatch();
 
     constructor() {
         _disableInitializers();
@@ -51,6 +52,9 @@ abstract contract Controllers is Initializable, IControllers, ERC165 {
         external
         meetsControllersThreshold(keccak256(abi.encode(_controllers, _weights, _nonce, block.chainid)), _signatures)
     {
+        if (_controllers.length != _weights.length) {
+            revert ArraryLengthMismatch();
+        }
         for (uint256 i = 0; i < _controllers.length; i++) {
             if (ControllersStorage.layout().weights[_controllers[i]] != 0) {
                 revert ControllerAlreadyExists();
