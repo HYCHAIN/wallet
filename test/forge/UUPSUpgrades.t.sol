@@ -44,13 +44,13 @@ contract UUPSUpgradesTest is TestBase {
     }
 
     function testCreateBySignatureInitializesSigner() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYPLAY wallet creation"));
         address _newWallet = _factory.createProxyFromSignature(sig);
         assertEq(1, Main(payable(_newWallet)).controllerWeight(signingAuthority));
     }
 
     function testChangeUUPSImplOnlyUpdatesSingleProxy() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYPLAY wallet creation"));
         MainImpl _newWallet = MainImpl(payable(_factory.createProxyFromSignature(sig)));
         assertFalse(_newWallet.isNew());
         MainImplNew _newImpl = new MainImplNew();
@@ -75,7 +75,7 @@ contract UUPSUpgradesTest is TestBase {
     }
 
     function testUpgradeToNonUUPSFails() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYPLAY wallet creation"));
         MainImpl _newWallet = MainImpl(payable(_factory.createProxyFromSignature(sig)));
         NonUUPSContract _newImpl = new NonUUPSContract();
 
@@ -91,7 +91,7 @@ contract UUPSUpgradesTest is TestBase {
     }
 
     function testRevertUpgradeWithoutThreshold() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYPLAY wallet creation"));
         MainImpl _newWallet = MainImpl(payable(_factory.createProxyFromSignature(sig)));
         MainImplNew _newImpl = new MainImplNew();
 

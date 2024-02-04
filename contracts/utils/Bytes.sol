@@ -5,7 +5,7 @@
 // @@@@  @@@@    @@@@       @@@@    @@@@@@@@@@ @@@@       @@@@ @@@@  @@@@
 // @@@@  @@@@    @@@@       @@@@    @@@@@@@@@@ @@@@       @@@@ @@@@  @@@@
 //
-// https://hytopia.com
+// https://hychain.com
 //
 // https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol
 pragma solidity 0.8.23;

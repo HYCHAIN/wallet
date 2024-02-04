@@ -1,5 +1,5 @@
 {
-    "name": "hytopia-wallet",
+    "name": "hychain-wallet",
     "version": "1.0.6",
     "description": "",
     "main": "index.js",
@@ -9,14 +9,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/hytopia-game/wallet.git"
+        "url": "git+https://github.com/hychain/wallet.git"
     },
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/hytopia-game/wallet/issues"
+        "url": "https://github.com/hychain/wallet/issues"
     },
-    "homepage": "https://github.com/hytopia-game/wallet#readme",
+    "homepage": "https://github.com/hychain/wallet#readme",
     "devDependencies": {
         "@nomicfoundation/hardhat-foundry": "^1.0.0",
         "@nomicfoundation/hardhat-toolbox": "^1.0.2",

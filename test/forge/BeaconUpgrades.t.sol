@@ -38,7 +38,7 @@ contract BeaconUpgradesTest is TestBase {
     }
 
     function testCreateBySignatureInitializesSigner() public {
-        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYTOPIA wallet creation"));
+        bytes memory sig = signHashAsMessage(signingPK, keccak256("Approve HYPLAY wallet creation"));
         address _newWallet = _factory.createProxyFromSignature(sig);
         assertEq(1, Main(payable(_newWallet)).controllerWeight(signingAuthority));
     }

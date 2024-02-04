@@ -5,7 +5,7 @@
 // @@@@  @@@@    @@@@       @@@@    @@@@@@@@@@ @@@@       @@@@ @@@@  @@@@
 // @@@@  @@@@    @@@@       @@@@    @@@@@@@@@@ @@@@       @@@@ @@@@  @@@@
 //
-// https://hytopia.com
+// https://hychain.com
 //
 pragma solidity 0.8.23;
 
@@ -30,7 +30,7 @@ contract FactoryCreatedBeaconProxy is BeaconProxy {
 
 contract BeaconProxyFactory is IBeaconProxyFactory {
     bytes32 public constant proxyHash = keccak256(type(FactoryCreatedBeaconProxy).creationCode);
-    bytes32 private constant PROOF_MESSAGE = keccak256("Approve HYTOPIA wallet creation");
+    bytes32 private constant PROOF_MESSAGE = keccak256("Approve HYPLAY wallet creation");
 
     event ContractDeployed(address indexed contractAddress, bool indexed wasSigned);
 

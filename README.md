@@ -1,6 +1,6 @@
-# HYTOPIA Smart Contract Wallet
+# HYCHAIN Smart Contract Wallet
 
-The HYTOPIA Smart Contract Wallet is a sophisticated and secure solution for managing user accounts on the blockchain. It leverages a multi-signer authority model, gasless transactions, and a unique Session authorization implementation. The wallet conforms to several standards including EIP-1271 for smart contract signatures, EIP-4337 for account abstraction, and EIP-1967 for beacon proxies. This allows HYTOPIA to create, transact, and manage users' accounts without holding total custody over their assets.
+The HYCHAIN Smart Contract Wallet is a sophisticated and secure solution for managing user accounts on the blockchain. It leverages a multi-signer authority model, gasless transactions, and a unique Session authorization implementation. The wallet conforms to several standards including EIP-1271 for smart contract signatures, EIP-4337 for account abstraction, and EIP-1967 for beacon proxies. This allows HYCHAIN to create, transact, and manage users' accounts without holding total custody over their assets.
 
 ## Initialization, Building and Testing
 
@@ -8,7 +8,7 @@ To initialize the repository, build the contracts, and run the forge tests, foll
 
 ### Initializing the Repository
 
-1. Clone the repository: `git clone https://github.com/hytopia-game/wallet`
+1. Clone the repository: `git clone https://github.com/hychain/wallet`
 2. Navigate into the cloned repository: `cd wallet`
 3. Install the necessary dependencies: `npm install`
 
@@ -22,7 +22,7 @@ To initialize the repository, build the contracts, and run the forge tests, foll
 
 ### Scripts
 
-The deployment of the HYTOPIA Smart Contract Wallet involves executing several scripts in a specific order. Below is a brief explanation of each script and its role in the deployment process.
+The deployment of the HYCHAIN Smart Contract Wallet involves executing several scripts in a specific order. Below is a brief explanation of each script and its role in the deployment process.
 
 #### DeployCreate3Factory.s.sol
 
@@ -37,7 +37,7 @@ forge script script/deploy/create3/DeployCreate3Factory.s.sol --fork-url http://
 
 #### DeployFactory.s.sol
 
-This script deploys a new HYTOPIA Wallet Factory contract using the CREATE3Factory previously deployed. The HYTOPIA Wallet Factory contract is responsible for deploying new instances of the HYTOPIA Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
+This script deploys a new HYCHAIN Wallet Factory contract using the CREATE3Factory previously deployed. The HYCHAIN Wallet Factory contract is responsible for deploying new instances of the HYCHAIN Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
 
 NOTE: Select a desired `_factorySalt` value for determining what address you want when deploying.
 
@@ -50,7 +50,7 @@ forge script script/deploy/DeployFactory.s.sol --rpc-url http://localhost:8545 -
 
 #### DeployWallet.s.sol
 
-This script deploys a new wallet using the HYTOPIA Wallet Factory. The wallet is deployed as a beacon proxy with the Main contract as the implementation (refenced from the UpgradeableBeacon). The Main contract contains all the logic for the wallet, and the beacon proxy delegates all calls to the Main contract. This allows for the logic of the wallet to be upgraded without needing to deploy new instances of the wallet.
+This script deploys a new wallet using the HYCHAIN Wallet Factory. The wallet is deployed as a beacon proxy with the Main contract as the implementation (refenced from the UpgradeableBeacon). The Main contract contains all the logic for the wallet, and the beacon proxy delegates all calls to the Main contract. This allows for the logic of the wallet to be upgraded without needing to deploy new instances of the wallet.
 
 NOTE: Select a desired `_testWalletSalt` value for determining what address you want when deploying. Ensure that the `Create3Factory` and `BeaconProxyFactory` have already been deployed and addresses saved in the `script/ScriptUtils.sol` file
 
@@ -61,7 +61,7 @@ forge script script/deploy/DeployWallet.s.sol --rpc-url http://localhost:8545 --
 
 ## Contract Modules
 
-Each of the following contracts play a crucial role in the functionality of the HYTOPIA Smart Contract Wallet, providing a secure and flexible solution for managing user accounts on the blockchain.
+Each of the following contracts play a crucial role in the functionality of the HYCHAIN Smart Contract Wallet, providing a secure and flexible solution for managing user accounts on the blockchain.
 
 ### Controllers.sol
 
@@ -81,7 +81,7 @@ The `Calls.sol` contract provides the basic functionality for making calls to ot
 
 #### BeaconProxyFactory.sol
 
-The `BeaconProxyFactory.sol` contract is used to create new instances of the HYTOPIA Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
+The `BeaconProxyFactory.sol` contract is used to create new instances of the HYCHAIN Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
 
 ### Authors
 
