@@ -148,7 +148,6 @@ contract SessionCallsTest is TestBase {
     /**
      * Call Tests
      */
-
     function testRevertNoSession() public {
         CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](1);
         reqs[0] = CallsStructs.CallRequest({
@@ -241,7 +240,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC20 Session Tests
      */
-
     function testAllowGasTokenSpend() public {
         vm.deal(address(_calls), 10 ether);
         startSession(
@@ -540,7 +538,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC1155 Session Tests
      */
-
     function testAllowERC1155TransferDirect() public {
         uint256 _testTokenId = 12345;
         _erc1155.mint(address(_calls), _testTokenId, 10);
@@ -692,7 +689,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC721 Session Tests
      */
-
     function testAllowERC721TransferDirect() public {
         uint256 _testTokenId = 12345;
         _erc721.mint(address(_calls), _testTokenId);
@@ -909,5 +905,218 @@ contract SessionCallsTest is TestBase {
         _calls.sessionCall(_callReq);
 
         assertEq(address(_contract), _erc721.ownerOf(_testTokenId));
+    }
+
+    function testAllowSessionDelegate() public {
+        vm.deal(address(_calls), 10 ether);
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(10 ether, address(_calls).balance);
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 1 ether,
+            data: abi.encodeCall(RandomContract.spend, ()),
+            nonce: ++nonceCur
+        });
+
+        bytes memory _delegateSig = signHashAsMessage(signingPK, keccak256(abi.encode(signingAuthority, 0, alice)));
+
+        vm.prank(alice);
+        _calls.sessionCallDelegated(_callReq, signingAuthority, 0, _delegateSig);
+
+        assertEq(9 ether, address(_calls).balance);
+
+        CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](1);
+        reqs[0] = _callReq;
+
+        vm.prank(alice);
+        _calls.sessionMultiCallDelegated(reqs, signingAuthority, 0, _delegateSig);
+
+        assertEq(8 ether, address(_calls).balance);
+    }
+
+    function testRevertUnauthorizedSessionDelegate() public {
+        vm.deal(address(_calls), 10 ether);
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 1 ether,
+            data: abi.encodeCall(RandomContract.spend, ()),
+            nonce: ++nonceCur
+        });
+
+        bytes memory _delegateSig = signHashAsMessage(signingPK, keccak256(abi.encode(signingAuthority, 0, alice)));
+
+        vm.prank(leet);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.UnauthorizedSessionDelegate.selector));
+        _calls.sessionCallDelegated(_callReq, signingAuthority, 0, _delegateSig);
+
+        CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](1);
+        reqs[0] = _callReq;
+
+        vm.prank(leet);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.UnauthorizedSessionDelegate.selector));
+        _calls.sessionMultiCallDelegated(reqs, signingAuthority, 0, _delegateSig);
+    }
+
+    function testRevertIncorrectSessionId() public {
+        vm.deal(address(_calls), 10 ether);
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 1 ether,
+            data: abi.encodeCall(RandomContract.spend, ()),
+            nonce: ++nonceCur
+        });
+
+        bytes memory _delegateSig = signHashAsMessage(signingPK, keccak256(abi.encode(signingAuthority, 1, alice)));
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.sessionCallDelegated(_callReq, signingAuthority, 1, _delegateSig);
+
+        CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](1);
+        reqs[0] = _callReq;
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.sessionMultiCallDelegated(reqs, signingAuthority, 1, _delegateSig);
+
+        // bump session up to 1
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        // these calls should work because we are on session 1
+        vm.prank(alice);
+        _calls.sessionCallDelegated(_callReq, signingAuthority, 1, _delegateSig);
+
+        vm.prank(alice);
+        _calls.sessionMultiCallDelegated(reqs, signingAuthority, 1, _delegateSig);
+
+        // bump session up to 2
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        // these sessions should fail because session 1 isn't the latest session.
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.sessionCallDelegated(_callReq, signingAuthority, 1, _delegateSig);
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.sessionMultiCallDelegated(reqs, signingAuthority, 1, _delegateSig);
+    }
+
+    function testAllowEndingActiveSessionWithDelegateSignature() public {
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createEmptySessionRequest(),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertTrue(_calls.hasActiveSession(signingAuthority));
+
+        bytes memory _delegateSig = signHashAsMessage(signingPK, keccak256(abi.encode(signingAuthority, 0, alice)));
+
+        vm.prank(alice);
+        _calls.endSessionDelegated(signingAuthority, 0, _delegateSig);
+
+        assertFalse(_calls.hasActiveSession(signingAuthority));
+    }
+
+    function testRevertEndingActiveDelegateSessionWithIncorrectSessionId() public {
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createEmptySessionRequest(),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        bytes memory _delegateSig = signHashAsMessage(signingPK, keccak256(abi.encode(signingAuthority, 1, alice)));
+
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.endSessionDelegated(signingAuthority, 1, _delegateSig);
+
+        assertTrue(_calls.hasActiveSession(signingAuthority));
+
+        // bump session up to 1
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        // these calls should work because we are on session 1
+        vm.prank(alice);
+        _calls.endSessionDelegated(signingAuthority, 1, _delegateSig);
+
+        // bump session up to 2
+        startSession(
+            address(_calls),
+            signingPK,
+            signingAuthority,
+            createGasSpendSessionRequest(2 ether, address(_contract), RandomContract.spend.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        // these sessions should fail because session 1 isn't the latest session.
+        vm.prank(alice);
+        vm.expectRevert(abi.encodeWithSelector(SessionCallsStorage.NoSessionStarted.selector, signingAuthority));
+        _calls.endSessionDelegated(signingAuthority, 1, _delegateSig);
     }
 }

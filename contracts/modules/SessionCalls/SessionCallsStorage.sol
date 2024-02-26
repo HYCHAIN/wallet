@@ -39,6 +39,7 @@ library SessionCallsStorage {
         }
     }
 
+    error UnauthorizedSessionDelegate();
     error InsufficientNativeTokenAllowance(uint256 amount, uint256 allowance);
     error SessionExpired();
     error NoSessionStarted(address sender);

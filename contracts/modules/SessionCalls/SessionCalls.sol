@@ -16,6 +16,7 @@ import { ERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
+import { Signatures } from "../../utils/Signatures.sol";
 import "contracts/interfaces/ISessionCalls.sol";
 import "../Calls/Calls.sol";
 import "./SessionCallsStorage.sol";
@@ -91,6 +92,28 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
     }
 
     /**
+     * @dev Ends a session for a session owner. Requires the caller to have the owner's delegate signature.
+     * @param _sessionOwner The owner of the session to end.
+     * @param _sessionId The id of the session.
+     * @param _delegateSig The signature of the session owner delegating to the caller of this function.
+     */
+    function endSessionDelegated(address _sessionOwner, uint256 _sessionId, bytes calldata _delegateSig) external {
+        // check if the given session is the currently used session id.
+        if (_sessionId + 1 != SessionCallsStorage.layout().nextSessionId[_sessionOwner]) {
+            revert SessionCallsStorage.NoSessionStarted(_sessionOwner);
+        }
+
+        bytes32 _delegateHash = keccak256(abi.encode(_sessionOwner, _sessionId, msg.sender));
+        address _signer = Signatures.getSigner(_delegateHash, _delegateSig);
+
+        if (_signer != _sessionOwner) {
+            revert SessionCallsStorage.UnauthorizedSessionDelegate();
+        }
+
+        _endSessionForCaller(_sessionOwner);
+    }
+
+    /**
      * @dev Ends a session for a caller. Needs sufficient controller authorization via signatures.
      * @param _caller The caller to end the session for.
      * @param _nonce The nonce of the signatures to verify against for authorization.
@@ -114,37 +137,36 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
      * @param _callRequest The request payload for the call to be invoked.
      */
     function sessionCall(CallsStructs.CallRequest calldata _callRequest) public returns (bytes memory) {
-        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
-        if (_l.nextSessionId[msg.sender] == 0) {
-            revert SessionCallsStorage.NoSessionStarted(msg.sender);
+        return _sessionCall(_callRequest, msg.sender);
+    }
+
+    /**
+     * @dev Invokes a call in a session. The caller must have an active session, the session must not be expired,
+     *  the target must be approved, and the caller must have sufficient allowance for the call if applicable.
+     * @param _callRequest The request payload for the call to be invoked.
+     * @param _sessionOwner The owner of the session to use for the call.
+     * @param _sessionId The id of the session to use for the call.
+     * @param _delegateSig The signature of the session owner delegating to the caller of this function.
+     */
+    function sessionCallDelegated(
+        CallsStructs.CallRequest calldata _callRequest,
+        address _sessionOwner,
+        uint256 _sessionId,
+        bytes calldata _delegateSig
+    ) public returns (bytes memory) {
+        // check if the given session is the currently used session id.
+        if (_sessionId + 1 != SessionCallsStorage.layout().nextSessionId[_sessionOwner]) {
+            revert SessionCallsStorage.NoSessionStarted(_sessionOwner);
         }
-        SessionCallsStructs.Session storage session =
-            _l.sessions[msg.sender][SessionCallsStorage.layout().nextSessionId[msg.sender] - 1];
 
-        if (session.expiresAt <= block.timestamp) {
-            revert SessionCallsStorage.SessionExpired();
-        }
-        if (_callRequest.value > session.allowances[address(0)][0]) {
-            revert SessionCallsStorage.InsufficientNativeTokenAllowance(
-                _callRequest.value, session.allowances[address(0)][0]
-            );
+        bytes32 _delegateHash = keccak256(abi.encode(_sessionOwner, _sessionId, msg.sender));
+        address _signer = Signatures.getSigner(_delegateHash, _delegateSig);
+
+        if (_signer != _sessionOwner) {
+            revert SessionCallsStorage.UnauthorizedSessionDelegate();
         }
 
-        // Check if the the given function is approved for the target in this session.
-        bytes4 _functionSelector = bytes4(_callRequest.data);
-        if (!_isFunctionApprovedForSession(session, _callRequest.target, _functionSelector)) {
-            revert SessionCallsStorage.UnauthorizedSessionCall(_callRequest.target, _functionSelector);
-        }
-
-        _deductERC20AllowancesIfNeeded(session, _callRequest, _functionSelector);
-        _deductERC1155AllowancesIfNeeded(session, _callRequest, _functionSelector);
-        _deductERC721AllowancesIfNeeded(session, _callRequest, _functionSelector);
-
-        // Deduct any value from session allowance.
-        // Do this before invoking the call incase the call has reentrancy that would allow the call to spend more than the allowance.
-        session.allowances[address(0)][0] -= _callRequest.value;
-
-        return _call(_callRequest);
+        return _sessionCall(_callRequest, _sessionOwner);
     }
 
     /**
@@ -156,6 +178,40 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
         for (uint256 i = 0; i < _callRequests.length; i++) {
             results[i] = sessionCall(_callRequests[i]);
+        }
+
+        return results;
+    }
+
+    /**
+     * @dev Invokes multiple calls in a single transaction. All must succeed for the transaction to succeed.
+     * @param _callRequests The request payload for each call to be invoked.
+     * @param _sessionOwner The owner of the session to use for the calls.
+     * @param _sessionId The id of the session to use for the calls.
+     * @param _delegateSig The signature of the session owner delegating to the caller of this function.
+     */
+    function sessionMultiCallDelegated(
+        CallsStructs.CallRequest[] calldata _callRequests,
+        address _sessionOwner,
+        uint256 _sessionId,
+        bytes calldata _delegateSig
+    ) external returns (bytes[] memory) {
+        // check if the given session is the currently used session id.
+        if (_sessionId + 1 != SessionCallsStorage.layout().nextSessionId[_sessionOwner]) {
+            revert SessionCallsStorage.NoSessionStarted(_sessionOwner);
+        }
+
+        bytes32 _delegateHash = keccak256(abi.encode(_sessionOwner, _sessionId, msg.sender));
+        address _signer = Signatures.getSigner(_delegateHash, _delegateSig);
+
+        if (_signer != _sessionOwner) {
+            revert SessionCallsStorage.UnauthorizedSessionDelegate();
+        }
+
+        bytes[] memory results = new bytes[](_callRequests.length);
+
+        for (uint256 i = 0; i < _callRequests.length; i++) {
+            results[i] = _sessionCall(_callRequests[i], _sessionOwner);
         }
 
         return results;
@@ -181,6 +237,43 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             revert SessionCallsStorage.NoSessionStarted(_caller);
         }
         _l.sessions[_caller][_l.nextSessionId[_caller] - 1].expiresAt = 0;
+    }
+
+    function _sessionCall(
+        CallsStructs.CallRequest calldata _callRequest,
+        address _sessionOwner
+    ) internal returns (bytes memory) {
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
+        if (_l.nextSessionId[_sessionOwner] == 0) {
+            revert SessionCallsStorage.NoSessionStarted(_sessionOwner);
+        }
+        SessionCallsStructs.Session storage session =
+            _l.sessions[_sessionOwner][SessionCallsStorage.layout().nextSessionId[_sessionOwner] - 1];
+
+        if (session.expiresAt <= block.timestamp) {
+            revert SessionCallsStorage.SessionExpired();
+        }
+        if (_callRequest.value > session.allowances[address(0)][0]) {
+            revert SessionCallsStorage.InsufficientNativeTokenAllowance(
+                _callRequest.value, session.allowances[address(0)][0]
+            );
+        }
+
+        // Check if the the given function is approved for the target in this session.
+        bytes4 _functionSelector = bytes4(_callRequest.data);
+        if (!_isFunctionApprovedForSession(session, _callRequest.target, _functionSelector)) {
+            revert SessionCallsStorage.UnauthorizedSessionCall(_callRequest.target, _functionSelector);
+        }
+
+        _deductERC20AllowancesIfNeeded(session, _callRequest, _functionSelector);
+        _deductERC1155AllowancesIfNeeded(session, _callRequest, _functionSelector);
+        _deductERC721AllowancesIfNeeded(session, _callRequest, _functionSelector);
+
+        // Deduct any value from session allowance.
+        // Do this before invoking the call incase the call has reentrancy that would allow the call to spend more than the allowance.
+        session.allowances[address(0)][0] -= _callRequest.value;
+
+        return _call(_callRequest);
     }
 
     /**
