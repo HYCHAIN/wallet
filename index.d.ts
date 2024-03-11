@@ -1,8 +1,8 @@
 interface ABI {
-  [key: string]: string;
+  [key: string]: { [key: string]: unknown };
 }
 
 declare module 'hychain-wallet' {
-  const _default: ABI[];
+  const _default: ABI;
   export default _default;
 }
