@@ -25,7 +25,7 @@ contract SessionCallsImpl is SessionCalls, ERC1155Holder, ERC721Holder {
         __SessionCalls_init(_controller);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Holder, Calls) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Holder, SessionCalls) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

@@ -18,6 +18,7 @@ import { Controllers } from "../Controllers/Controllers.sol";
 import { ERC1271 } from "../ERC1271/ERC1271.sol";
 import { Versioned } from "../Versioned/Versioned.sol";
 import { PreauthorizedCalls } from "../PreauthorizedCalls/PreauthorizedCalls.sol";
+import { SessionCalls } from "../SessionCalls/SessionCalls.sol";
 import { MainStorage } from "./MainStorage.sol";
 import { IMain } from "contracts/interfaces/IMain.sol";
 
@@ -27,6 +28,7 @@ contract Main is
     Initializable,
     Versioned,
     PreauthorizedCalls,
+    SessionCalls,
     ERC1155Holder,
     ERC721Holder,
     ERC1271
@@ -48,7 +50,7 @@ contract Main is
     function supportsInterface(bytes4 _interfaceID)
         public
         view
-        override(PreauthorizedCalls, ERC1271, ERC1155Holder)
+        override(PreauthorizedCalls, SessionCalls, ERC1271, ERC1155Holder)
         returns (bool)
     {
         return super.supportsInterface(_interfaceID);

@@ -175,6 +175,18 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         return session.expiresAt > block.timestamp;
     }
 
+    /**
+     * @dev Check if the contract supports an interface.
+     * @param interfaceId The interface ID to check for support.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Calls) returns (bool) {
+        if (interfaceId == type(ISessionCalls).interfaceId) {
+            return true;
+        }
+
+        return super.supportsInterface(interfaceId);
+    }
+
     function _endSessionForCaller(address _caller) private {
         SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
         if (_l.nextSessionId[_caller] == 0) {
