@@ -7,9 +7,6 @@ typechain
 typechain-types
 deploycredentials.txt
 
-#Autogen
-artifacts
-
 #Hardhat files
 cache
 cache_hardhat
