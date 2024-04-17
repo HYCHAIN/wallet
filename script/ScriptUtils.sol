@@ -27,13 +27,10 @@ contract ScriptUtils is Script {
     BeaconProxyFactory internal _factory = BeaconProxyFactory(_factoryAddress);
 
     constructor() {
-        if (isPolygonMumbai()) {
-            deployerPrivateKey = vm.envUint("DEV_PRIVATE_KEY");
-        } else if (isLocalhost()) {
+        if (isLocalhost()) {
             deployerPrivateKey = vm.envUint("ANVIL_PRIVATE_KEY");
         } else {
-            console2.log("Unsupported chain for script:", block.chainid);
-            revert("unknown chain id");
+            deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         }
         deployer = vm.addr(deployerPrivateKey);
     }
