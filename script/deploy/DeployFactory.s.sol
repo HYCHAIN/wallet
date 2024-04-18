@@ -7,7 +7,7 @@ import "forge-std/Script.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { CREATE3Factory } from "@create3-factory/CREATE3Factory.sol";
 
-import { BeaconProxyFactory } from "contracts/BeaconProxyFactory.sol";
+import { WalletProxyFactory } from "contracts/WalletProxyFactory.sol";
 import { Main } from "contracts/modules/Main/Main.sol";
 
 import { ScriptUtils } from "script/ScriptUtils.sol";
@@ -38,16 +38,15 @@ contract FactoryDeployer is Script, ScriptUtils {
             return;
         }
 
-        // Create a BeaconProxyFactory with the Main contract as the beacon implementation.
+        // Create a WalletProxyFactory with the Main contract as the beacon implementation.
         // This will cause the deployed factory to only deploy Main contracts pointing to this initial
         // UpgradeableBeacon deployment.
         // Main is the wallet contract with all desired features attached.
         address newFactoryAddr = _createFactory.deploy(
-            _factorySalt, abi.encodePacked(type(BeaconProxyFactory).creationCode, abi.encode(address(new Main())))
+            _factorySalt, abi.encodePacked(type(WalletProxyFactory).creationCode, abi.encode(address(new Main())))
         );
 
         console2.log("Factory deployed -->", newFactoryAddr);
-        console2.log("Factory beacon address -->", BeaconProxyFactory(newFactoryAddr).beacon());
         vm.stopBroadcast();
     }
 
