@@ -16,4 +16,11 @@ library CallsStructs {
         uint256 nonce;
         bytes data;
     }
+
+    struct CreateRequest {
+        bytes32 salt;
+        uint256 nonce;
+        bytes bytecode;
+        bytes initCode;
+    }
 }

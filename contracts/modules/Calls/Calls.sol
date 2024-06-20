@@ -12,6 +12,7 @@ pragma solidity 0.8.23;
 import { Initializable } from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import { ICalls, CallsStructs } from "contracts/interfaces/ICalls.sol";
 import { Controllers } from "../Controllers/Controllers.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 
 abstract contract Calls is ICalls, Initializable, Controllers {
     constructor() {
@@ -41,6 +42,23 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         returns (bytes memory)
     {
         return _call(_callRequest);
+    }
+
+    /**
+     * @dev Execute a call.
+     * @param _createRequest The contract creation arguments to execute
+     * @param _signatures Signatures from controllers to meet the threshold required to invoke functions on the wallet.
+     */
+    function create(
+        CallsStructs.CreateRequest calldata _createRequest,
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    )
+        external
+        meetsControllersThreshold(keccak256(abi.encode(_createRequest, _deadline, block.chainid)), _deadline, _signatures)
+        returns (address)
+    {
+        return _create(_createRequest);
     }
 
     /**
@@ -94,5 +112,22 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         }
 
         return result;
+    }
+
+    function _create(CallsStructs.CreateRequest calldata _createRequest) internal returns (address newContract_) {
+        newContract_ = Create2.deploy(0, _createRequest.salt, _createRequest.bytecode);
+        if (_createRequest.initCode.length > 0) {
+            (bool _success, bytes memory _error) = newContract_.call(_createRequest.initCode);
+            if (!_success) {
+                if (_error.length > 0) {
+                    // bubble up the _error
+                    assembly {
+                        revert(add(32, _error), mload(_error))
+                    }
+                } else {
+                    revert CreateInitCodeFailed();
+                }
+            }
+        }
     }
 }

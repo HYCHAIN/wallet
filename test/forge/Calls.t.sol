@@ -217,4 +217,30 @@ contract CallsTest is TestBase {
         vm.expectRevert(Controllers.DeadlineReached.selector);
         _calls.call(_callReq, _sigs, block.timestamp - 1);
     }
+
+    function testCreateContractWithConsensus() public {
+        CallsStructs.CreateRequest memory _createReq = CallsStructs.CreateRequest({
+            salt: 0,
+            nonce: 1,
+            bytecode: abi.encodePacked(type(Counter).creationCode),
+            initCode: ""
+        });
+        assertEq(0, address(_calls).balance);
+
+        address _counterAddr = _calls.create(
+            _createReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_createReq, _deadline, block.chainid)))),
+            _deadline
+        );
+
+        Counter(_counterAddr).increment(5);
+        assertEq(5, Counter(_counterAddr).count());
+
+        vm.expectRevert("At least one signature already used");
+        _calls.create(
+            _createReq,
+            arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_createReq, _deadline, block.chainid)))),
+            _deadline
+        );
+    }
 }

@@ -180,8 +180,10 @@ contract ControllersTest is TestBase {
     }
 
     function testControllerThresholdsEqualWeightsFuzz(uint256 _numControllers, uint256 _threshold) public {
-        vm.assume(_numControllers > 0 && _numControllers <= 6);
-        vm.assume(_threshold > 0 && _threshold <= _numControllers);
+        vm.assume(_numControllers > 0);
+        _numControllers = _numControllers % 6 + 1;
+        vm.assume(_threshold > 0);
+        _threshold = _threshold % _numControllers + 1;
         uint256 pkOffset = 100;
 
         for (uint256 i = 0; i < _numControllers; i++) {

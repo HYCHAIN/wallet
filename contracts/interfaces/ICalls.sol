@@ -12,6 +12,8 @@ pragma solidity 0.8.23;
 import "contracts/modules/Calls/CallsStructs.sol";
 
 interface ICalls {
+    error CreateInitCodeFailed();
+
     function call(
         CallsStructs.CallRequest calldata _callRequest,
         bytes[] calldata _signatures,
