@@ -10,7 +10,7 @@ deploycredentials.txt
 #Hardhat files
 cache
 cache_hardhat
-artifacts
+#artifacts
 
 #Foundry files
 .out

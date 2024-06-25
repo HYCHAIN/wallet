@@ -4,6 +4,21 @@
   "sourceName": "contracts/interfaces/ISessionCalls.sol",
   "abi": [
     {
+      "inputs": [],
+      "name": "CreateInitCodeFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InsufficientFunds",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RevertWithoutMessage",
+      "type": "error"
+    },
+    {
       "inputs": [
         {
           "components": [
