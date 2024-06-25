@@ -69,17 +69,10 @@ contract Main is
         bytes calldata data,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        payable
-        virtual
-        onlyProxy
-        meetsControllersThreshold(
-            keccak256(abi.encode(newImplementation, data, _deadline, block.chainid)),
-            _deadline,
-            _signatures
-        )
-    {
+    ) external payable virtual onlyProxy {
+        _requireMeetsControllersThreshold(
+            keccak256(abi.encode(newImplementation, data, _deadline, block.chainid)), _deadline, _signatures
+        );
         MainStorage.layout().canUpgrade = true;
         upgradeToAndCall(newImplementation, data);
         // Should already be set but just to be safe

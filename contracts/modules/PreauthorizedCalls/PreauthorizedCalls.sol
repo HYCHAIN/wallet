@@ -33,14 +33,14 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         uint256 _nonce,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        meetsControllersThreshold(
-            keccak256(abi.encode(_callRequestPreauthorized, _callRequestPreauthorization, _nonce, _deadline, block.chainid)),
+    ) external {
+        _requireMeetsControllersThreshold(
+            keccak256(
+                abi.encode(_callRequestPreauthorized, _callRequestPreauthorization, _nonce, _deadline, block.chainid)
+            ),
             _deadline,
             _signatures
-        )
-    {
+        );
         if (_callRequestPreauthorization.maxCalls == 0) {
             revert MaxCallsMustNotBeZero();
         }
@@ -66,14 +66,10 @@ contract PreauthorizedCalls is IPreauthorizedCalls, Calls {
         uint256 _nonce,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        meetsControllersThreshold(
-            keccak256(abi.encode(_callRequestPreauthorized, _nonce, _deadline, block.chainid)),
-            _deadline,
-            _signatures
-        )
-    {
+    ) external {
+        _requireMeetsControllersThreshold(
+            keccak256(abi.encode(_callRequestPreauthorized, _nonce, _deadline, block.chainid)), _deadline, _signatures
+        );
         delete PreauthorizedCallsStorage.layout().callRequestPreauthorizations[
       keccak256(
         abi.encode(

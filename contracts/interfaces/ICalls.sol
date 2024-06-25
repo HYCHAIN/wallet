@@ -13,6 +13,8 @@ import "contracts/modules/Calls/CallsStructs.sol";
 
 interface ICalls {
     error CreateInitCodeFailed();
+    error RevertWithoutMessage();
+    error InsufficientFunds();
 
     function call(
         CallsStructs.CallRequest calldata _callRequest,

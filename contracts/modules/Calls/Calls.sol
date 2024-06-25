@@ -36,11 +36,10 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         CallsStructs.CallRequest calldata _callRequest,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        meetsControllersThreshold(keccak256(abi.encode(_callRequest, _deadline, block.chainid)), _deadline, _signatures)
-        returns (bytes memory)
-    {
+    ) external returns (bytes memory) {
+        _requireMeetsControllersThreshold(
+            keccak256(abi.encode(_callRequest, _deadline, block.chainid)), _deadline, _signatures
+        );
         return _call(_callRequest);
     }
 
@@ -53,11 +52,10 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         CallsStructs.CreateRequest calldata _createRequest,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        meetsControllersThreshold(keccak256(abi.encode(_createRequest, _deadline, block.chainid)), _deadline, _signatures)
-        returns (address)
-    {
+    ) external returns (address) {
+        _requireMeetsControllersThreshold(
+            keccak256(abi.encode(_createRequest, _deadline, block.chainid)), _deadline, _signatures
+        );
         return _create(_createRequest);
     }
 
@@ -70,11 +68,10 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         CallsStructs.CallRequest[] calldata _callRequests,
         bytes[] calldata _signatures,
         uint256 _deadline
-    )
-        external
-        meetsControllersThreshold(keccak256(abi.encode(_callRequests, _deadline, block.chainid)), _deadline, _signatures)
-        returns (bytes[] memory)
-    {
+    ) external returns (bytes[] memory) {
+        _requireMeetsControllersThreshold(
+            keccak256(abi.encode(_callRequests, _deadline, block.chainid)), _deadline, _signatures
+        );
         bytes[] memory results = new bytes[](_callRequests.length);
 
         for (uint256 i = 0; i < _callRequests.length; i++) {
@@ -102,9 +99,9 @@ abstract contract Calls is ICalls, Initializable, Controllers {
         if (!success) {
             if (result.length == 0) {
                 if (_callRequest.value > 0 && _callRequest.value > address(this).balance) {
-                    revert("Insufficient funds to transfer");
+                    revert InsufficientFunds();
                 }
-                revert("Call reverted without message");
+                revert RevertWithoutMessage();
             }
             assembly {
                 revert(add(result, 32), mload(result))

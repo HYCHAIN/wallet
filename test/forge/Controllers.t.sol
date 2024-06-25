@@ -13,17 +13,13 @@ contract ControllersImpl is Controllers {
         __Controllers_init(_controller);
     }
 
-    function doSomethingWithConsensus(bytes[] calldata _signatures)
-        external
-        meetsControllersThreshold(keccak256(abi.encode(block.chainid)), 99999999, _signatures)
-    {
+    function doSomethingWithConsensus(bytes[] calldata _signatures) external {
+        _requireMeetsControllersThreshold(keccak256(abi.encode(block.chainid)), 99999999, _signatures);
         didSomething = true;
     }
 
-    function doSomethingWithConsensus(
-        bytes[] calldata _signatures,
-        uint256 _deadline
-    ) external meetsControllersThreshold(keccak256(abi.encode(block.chainid)), _deadline, _signatures) {
+    function doSomethingWithConsensus(bytes[] calldata _signatures, uint256 _deadline) external {
+        _requireMeetsControllersThreshold(keccak256(abi.encode(block.chainid)), _deadline, _signatures);
         didSomething = true;
     }
 }
