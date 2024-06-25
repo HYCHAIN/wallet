@@ -5,7 +5,7 @@ import { TestBase } from "./utils/TestBase.sol";
 
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import { Calls, CallsStructs } from "contracts/modules/Calls/Calls.sol";
+import { Calls, CallsStructs, ICalls } from "contracts/modules/Calls/Calls.sol";
 import { BeaconProxyFactory } from "contracts/BeaconProxyFactory.sol";
 import { Main, IMain } from "contracts/modules/Main/Main.sol";
 
@@ -45,7 +45,7 @@ contract MainTest is TestBase {
         assertEq(0, address(_wallet1).balance);
         assertEq(0, leet.balance);
 
-        vm.expectRevert("Insufficient funds to transfer");
+        vm.expectRevert(ICalls.InsufficientFunds.selector);
         _wallet1.call(
             _callReq,
             arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { TestBase } from "./utils/TestBase.sol";
 
-import { Calls, CallsStructs, Controllers } from "contracts/modules/Calls/Calls.sol";
+import { Calls, CallsStructs, Controllers, ICalls } from "contracts/modules/Calls/Calls.sol";
 
 import "forge-std/console.sol";
 
@@ -54,7 +54,7 @@ contract CallsTest is TestBase {
         assertEq(0, address(_calls).balance);
         assertEq(0, leet.balance);
 
-        vm.expectRevert("Insufficient funds to transfer");
+        vm.expectRevert(ICalls.InsufficientFunds.selector);
         _calls.call(
             _callReq,
             arraySingle(signHashAsMessage(signingPK, keccak256(abi.encode(_callReq, _deadline, block.chainid)))),
