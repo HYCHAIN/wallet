@@ -26,8 +26,11 @@ contract FactoryDeployer is Script, ScriptUtils {
     function run() external {
         vm.startBroadcast(deployerPrivateKey);
 
-        _createFactory = new CREATE3Factory();
-        console2.log("CREATE3Factory deployed at -->", address(_createFactory));
+        if (_createFactory == CREATE3Factory(address(0))) {
+            console2.log("CREATE3Factory not set. Please set the CREATE3Factory address in the constructor.");
+            vm.stopBroadcast();
+            return;
+        }
 
         address _factoryAddr = _createFactory.getDeployed(deployer, _factorySalt);
         console2.log("Deploying Factory to -->", _factoryAddr);

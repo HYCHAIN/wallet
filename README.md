@@ -37,7 +37,7 @@ forge script script/deploy/create3/DeployCreate3Factory.s.sol --fork-url http://
 
 #### DeployFactory.s.sol
 
-This script deploys a new HYCHAIN Wallet Factory contract using the CREATE3Factory previously deployed. The HYCHAIN Wallet Factory contract is responsible for deploying new instances of the HYCHAIN Smart Contract Wallet. It uses the beacon proxy pattern, which allows the logic of the wallet to be upgraded without needing to deploy new instances.
+This script deploys a new HYCHAIN Wallet Factory contract using the CREATE3Factory previously deployed. The HYCHAIN Wallet Factory contract is responsible for deploying new instances of the HYCHAIN Smart Contract Wallet. It uses the uups proxy pattern, which allows the logic of the wallet to be upgraded on a wallet-by-wallet basis.
 
 NOTE: Select a desired `_factorySalt` value for determining what address you want when deploying.
 
@@ -48,16 +48,15 @@ An example command to execute the script is as follows:
 forge script script/deploy/DeployFactory.s.sol --rpc-url http://localhost:8545 --broadcast --verify
 ```
 
-#### DeployWallet.s.sol
+## Upgrading the Factory's Wallet Implementation
 
-This script deploys a new wallet using the HYCHAIN Wallet Factory. The wallet is deployed as a beacon proxy with the Main contract as the implementation (refenced from the UpgradeableBeacon). The Main contract contains all the logic for the wallet, and the beacon proxy delegates all calls to the Main contract. This allows for the logic of the wallet to be upgraded without needing to deploy new instances of the wallet.
+Since the Factory is non-upgradeable, we must redeploy every new version of the wallet implementation.
 
-NOTE: Select a desired `_testWalletSalt` value for determining what address you want when deploying. Ensure that the `Create3Factory` and `BeaconProxyFactory` have already been deployed and addresses saved in the `script/ScriptUtils.sol` file
+After modifying the wallet implementation, change the factory salt in `ScriptUtils.sol` and re-run the above DeployFactory.s.sol script which will deploy a new factory with a new Main implementation.
 
-An example command to execute the script is as follows:
-```
-forge script script/deploy/DeployWallet.s.sol --rpc-url http://localhost:8545 --broadcast --verify
-```
+## Upgrading a Wallet's Implementation
+To upgrade an existing wallet's implementation, the owner of the wallet must simply call the `upgradeToAndCall()`
+function which requires consensus from the controllers before upgrading via the UUPS Proxy standard.
 
 ## Contract Modules
 
