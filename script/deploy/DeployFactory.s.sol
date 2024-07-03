@@ -45,8 +45,9 @@ contract FactoryDeployer is Script, ScriptUtils {
         // This will cause the deployed factory to only deploy Main contracts pointing to this initial
         // UpgradeableBeacon deployment.
         // Main is the wallet contract with all desired features attached.
+        Main _main = new Main();
         address newFactoryAddr = _createFactory.deploy(
-            _factorySalt, abi.encodePacked(type(WalletProxyFactory).creationCode, abi.encode(address(new Main())))
+            _factorySalt, abi.encodePacked(type(WalletProxyFactory).creationCode, abi.encode(address(_main)))
         );
 
         console2.log("Factory deployed -->", newFactoryAddr);
