@@ -6,6 +6,9 @@ import { SessionCalls } from "contracts/modules/SessionCalls/SessionCalls.sol";
 import { TestUtilities } from "test/forge/utils/TestUtilities.sol";
 
 abstract contract TestSessionUtilities is TestUtilities {
+    bytes4 internal constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x00001337;
+    address internal constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(1337);
+
     function createEmptySessionRequest() internal pure returns (SessionCallsStructs.SessionRequest memory) {
         return SessionCallsStructs.SessionRequest({
             nativeAllowance: 0 ether,
@@ -81,6 +84,50 @@ abstract contract TestSessionUtilities is TestUtilities {
             nativeAllowance: 0,
             contractFunctionSelectors: selectors,
             erc20Allowances: erc20Allowances,
+            erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+            erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+        });
+    }
+
+    function createAllContractsSessionRequest(bytes4 _functionSelector)
+        internal
+        pure
+        returns (SessionCallsStructs.SessionRequest memory)
+    {
+        SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
+            new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
+        bytes4[] memory functions = new bytes4[](1);
+        functions[0] = _functionSelector;
+        selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
+            aContract: MAGIC_APPROVE_ALL_CONTRACT_ADDRESS,
+            functionSelectors: functions
+        });
+        return SessionCallsStructs.SessionRequest({
+            nativeAllowance: 0,
+            contractFunctionSelectors: selectors,
+            erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+            erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+            erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+        });
+    }
+
+    function createAllContractsAllFunctionsSessionRequest()
+        internal
+        pure
+        returns (SessionCallsStructs.SessionRequest memory)
+    {
+        SessionCallsStructs.SessionRequest_ContractFunctionSelectors[] memory selectors =
+            new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](1);
+        bytes4[] memory functions = new bytes4[](1);
+        functions[0] = MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS;
+        selectors[0] = SessionCallsStructs.SessionRequest_ContractFunctionSelectors({
+            aContract: MAGIC_APPROVE_ALL_CONTRACT_ADDRESS,
+            functionSelectors: functions
+        });
+        return SessionCallsStructs.SessionRequest({
+            nativeAllowance: 0,
+            contractFunctionSelectors: selectors,
+            erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
             erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
             erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
         });

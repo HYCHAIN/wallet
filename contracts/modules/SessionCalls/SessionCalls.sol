@@ -25,6 +25,8 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         bytes4(keccak256("safeTransferFrom(address,address,uint256)"));
     bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
         bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
+    bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x00001337;
+    address public constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(1337);
 
     /**
      * @dev Disables initializations for any implementation contracts deployed.
@@ -408,8 +410,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         address _targetContract,
         bytes4 _functionSelector
     ) private view returns (bool isApproved_) {
-        // Must have explicit approval for restricted functions even if default all approved
-        isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector];
+        isApproved_ = _session.contractFunctionSelectors[_targetContract][_functionSelector] // exlicitly approved contract+function
+            || _session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS] // exlicitly approved contract+all functions
+            || _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][_functionSelector] // exlicitly approved all contracts+function
+            || _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]; // exlicitly approved all contracts+all functions
     }
 
     /**

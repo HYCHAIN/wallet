@@ -25,7 +25,13 @@ contract SessionCallsImpl is SessionCalls, ERC1155Holder, ERC721Holder {
         __SessionCalls_init(_controller);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Holder, SessionCalls) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155Holder, SessionCalls)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }
@@ -148,7 +154,6 @@ contract SessionCallsTest is TestBase {
     /**
      * Call Tests
      */
-
     function testRevertNoSession() public {
         CallsStructs.CallRequest[] memory reqs = new CallsStructs.CallRequest[](1);
         reqs[0] = CallsStructs.CallRequest({
@@ -241,7 +246,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC20 Session Tests
      */
-
     function testAllowGasTokenSpend() public {
         vm.deal(address(_calls), 10 ether);
         startSession(
@@ -483,6 +487,79 @@ contract SessionCallsTest is TestBase {
         assertEq(2 ether, _erc20.balanceOf(leet));
     }
 
+    function testMagicSessionApprovalSuccess() public {
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(RandomContract.increment.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeCall(RandomContract.increment, 1),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(_contract.count(), 1);
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeWithSelector(RandomContract.spend.selector),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector, address(_contract), RandomContract.spend.selector
+            )
+        );
+        _calls.sessionCall(_callReq);
+    }
+
+    function testMagicSessionApproveAllContractsAndFunctionsSuccess() public {
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsAllFunctionsSessionRequest(),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeCall(RandomContract.increment, 1),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(_contract.count(), 1);
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeWithSelector(RandomContract.spend.selector),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+    }
+
     function testCouldBeERC20() public {
         debug("Is ERC20: ", _couldBeERC20(address(_erc20)));
         _erc20.mint(deployer, 10 ether);
@@ -540,7 +617,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC1155 Session Tests
      */
-
     function testAllowERC1155TransferDirect() public {
         uint256 _testTokenId = 12345;
         _erc1155.mint(address(_calls), _testTokenId, 10);
@@ -610,7 +686,7 @@ contract SessionCallsTest is TestBase {
             data: abi.encodeCall(
                 ERC1155Mock.safeBatchTransferFrom,
                 (address(_calls), leet, asSingletonArray(_testTokenId), asSingletonArray(2), "")
-                ),
+            ),
             nonce: ++nonceCur
         });
 
@@ -692,7 +768,6 @@ contract SessionCallsTest is TestBase {
     /**
      * ERC721 Session Tests
      */
-
     function testAllowERC721TransferDirect() public {
         uint256 _testTokenId = 12345;
         _erc721.mint(address(_calls), _testTokenId);
