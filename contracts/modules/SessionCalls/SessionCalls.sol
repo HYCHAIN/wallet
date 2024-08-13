@@ -26,7 +26,7 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
     bytes4 private constant SAFE_TRANSFER_FROM_SELECTOR2 =
         bytes4(keccak256("safeTransferFrom(address,address,uint256,bytes)"));
     bytes4 private constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x00001337;
-    address public constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(1337);
+    address public constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(0x1337);
 
     /**
      * @dev Disables initializations for any implementation contracts deployed.

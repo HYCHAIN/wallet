@@ -7,7 +7,7 @@ import { TestUtilities } from "test/forge/utils/TestUtilities.sol";
 
 abstract contract TestSessionUtilities is TestUtilities {
     bytes4 internal constant MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS = 0x00001337;
-    address internal constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(1337);
+    address internal constant MAGIC_APPROVE_ALL_CONTRACT_ADDRESS = address(0x1337);
 
     function createEmptySessionRequest() internal pure returns (SessionCallsStructs.SessionRequest memory) {
         return SessionCallsStructs.SessionRequest({
