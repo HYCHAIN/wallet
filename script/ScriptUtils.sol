@@ -15,9 +15,9 @@ contract ScriptUtils is Script {
     address deployer;
 
     // The create factory for the {ADD_DEPLOYER_ADDRESS_HERE} deployer
-    CREATE3Factory internal _createFactory = CREATE3Factory(address(0)); // TODO: add address when deployed
+    CREATE3Factory internal _createFactory = CREATE3Factory(0x1b501760D6C5470FfCb3474133aEB96d8C787f8a); // TODO: add address when deployed
 
-    bytes32 internal _factorySalt = keccak256(bytes("FactoryTestnet1"));
+    bytes32 internal _factorySalt = keccak256(bytes("Factory1"));
 
     bytes32 internal _testWalletSalt = keccak256(bytes("TestWalletTestnet1"));
 
