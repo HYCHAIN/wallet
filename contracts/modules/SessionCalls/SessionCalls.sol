@@ -240,6 +240,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         bytes4 _functionSelector
     ) private {
         if (_functionSelector == ERC20.transfer.selector) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_couldBeERC20(_callRequest.target)) {
                 // It couldn't be an ERC20 contract, so we don't need to check allowances.
                 // It could be an ERC721, since they both have the `transferFrom` function.
@@ -256,6 +260,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
             session.allowances[_callRequest.target][0] -= _amount;
         } else if (_functionSelector == ERC20.transferFrom.selector) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_couldBeERC20(_callRequest.target)) {
                 // It couldn't be an ERC20 contract, so we don't need to check allowances.
                 return;
@@ -285,6 +293,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         bytes4 _functionSelector
     ) private {
         if (_functionSelector == IERC1155.safeTransferFrom.selector) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
                 // Non-ERC1155 standard contract calling safeTransferFrom.
                 return;
@@ -301,6 +313,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
 
             session.allowances[_callRequest.target][_tokenId] -= _amount;
         } else if (_functionSelector == IERC1155.safeBatchTransferFrom.selector) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_supportsInterface(_callRequest.target, type(IERC1155).interfaceId)) {
                 // Non-ERC1155 standard contract calling safeBatchTransferFrom.
                 return;
@@ -340,6 +356,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         // gas overhead for checking that storage slot when not needed
 
         if (_functionSelector == IERC721.transferFrom.selector) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling transferFrom.
                 // Could be an ERC20 contract, since both contracts have `transferFrom`
@@ -360,6 +380,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             session.allowances[_callRequest.target][_tokenId] = 0;
             // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
         } else if (_functionSelector == SAFE_TRANSFER_FROM_SELECTOR1) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling safeTransferFrom.
                 return;
@@ -379,6 +403,10 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             session.allowances[_callRequest.target][_tokenId] = 0;
             // Solidity cannot differentiate function overloads using .selector, so we have to manually calculate the selector for safeTransferFrom
         } else if (_functionSelector == SAFE_TRANSFER_FROM_SELECTOR2) {
+            // If the session has full approval for the entire collection, no need to check allowances.
+            if (_hasMagicApprovalOfFunction(session, _functionSelector)) {
+                return;
+            }
             if (!_supportsInterface(_callRequest.target, type(IERC721).interfaceId)) {
                 // Non-ERC721 standard contract calling safeTransferFrom.
                 return;
@@ -414,6 +442,14 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             || _session.contractFunctionSelectors[_targetContract][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS] // exlicitly approved contract+all functions
             || _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][_functionSelector] // exlicitly approved all contracts+function
             || _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]; // exlicitly approved all contracts+all functions
+    }
+
+    function _hasMagicApprovalOfFunction(
+        SessionCallsStructs.Session storage _session,
+        bytes4 _functionSelector
+    ) internal view returns (bool hasMagicApproval_) {
+        hasMagicApproval_ = _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][MAGIC_CONTRACT_ALL_FUNCTION_SELECTORS]
+            || _session.contractFunctionSelectors[MAGIC_APPROVE_ALL_CONTRACT_ADDRESS][_functionSelector];
     }
 
     /**

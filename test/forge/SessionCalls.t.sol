@@ -487,6 +487,357 @@ contract SessionCallsTest is TestBase {
         assertEq(2 ether, _erc20.balanceOf(leet));
     }
 
+    function testMagicApprovalDoesntTrackAllowancesERC20() public {
+        _erc20.mint(address(_calls), 10 ether);
+
+        // ERC20.transfer test
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC20MockDecimals.transfer.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(10 ether, _erc20.balanceOf(address(_calls)));
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc20),
+            value: 0,
+            data: abi.encodeCall(ERC20MockDecimals.transfer, (leet, 1 ether)),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // a second call should be allowed because there are not allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(8 ether, _erc20.balanceOf(address(_calls)));
+        assertEq(2 ether, _erc20.balanceOf(leet));
+
+        // ERC20.transferFrom test
+        // Must approve first, even though we are transfering from ourelves.
+        // This is because the ERC20 standard didn't have the owner bypass that ERC721s have with transferFrom
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC20MockDecimals.approve.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+        _callReq = CallsStructs.CallRequest({
+            target: address(_erc20),
+            value: 0,
+            data: abi.encodeCall(ERC20MockDecimals.approve, (address(_calls), 2 ether)),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // Start transferFrom session
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC20MockDecimals.transferFrom.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_erc20),
+            value: 0,
+            data: abi.encodeCall(ERC20MockDecimals.transferFrom, (address(_calls), leet, 1 ether)),
+            nonce: ++nonceCur
+        });
+
+        // Call transferFrom
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // Try to call again without the required allowance
+        // Should still work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(6 ether, _erc20.balanceOf(address(_calls)));
+        assertEq(4 ether, _erc20.balanceOf(leet));
+    }
+
+    function testMagicApprovalDoesntTrackAllowancesERC1155() public {
+        uint256 _testTokenId = 12345;
+        _erc1155.mint(address(_calls), _testTokenId, 10);
+
+        // ERC20.transfer test
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC1155Mock.safeTransferFrom.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(10, _erc1155.balanceOf(address(_calls), _testTokenId));
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc1155),
+            value: 0,
+            data: abi.encodeCall(ERC1155Mock.safeTransferFrom, (address(_calls), leet, _testTokenId, 2, "")),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // a second call should be allowed because there are not allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(6, _erc1155.balanceOf(address(_calls), _testTokenId));
+        assertEq(4, _erc1155.balanceOf(leet, _testTokenId));
+
+        // ERC20.transferFrom test
+        // Must approve first, even though we are transfering from ourelves.
+        // This is because the ERC20 standard didn't have the owner bypass that ERC721s have with transferFrom
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC1155Mock.safeBatchTransferFrom.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+        _callReq = CallsStructs.CallRequest({
+            target: address(_erc1155),
+            value: 0,
+            data: abi.encodeCall(
+                ERC1155Mock.safeBatchTransferFrom,
+                (address(_calls), leet, asSingletonArray(_testTokenId), asSingletonArray(2), "")
+            ),
+            nonce: ++nonceCur
+        });
+
+        // Call transferFrom
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        // Try to call again without the required allowance
+        // Should still work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC20Transfer.selector, address(_erc20), 1 ether, 0
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(2, _erc1155.balanceOf(address(_calls), _testTokenId));
+        assertEq(8, _erc1155.balanceOf(leet, _testTokenId));
+    }
+
+    function testMagicApprovalDoesntTrackAllowancesERC721() public {
+        uint256 _testTokenId = 12345;
+        _erc721.mint(address(_calls), _testTokenId);
+
+        // transferFrom session test
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(ERC721Mock.transferFrom.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc721),
+            value: 0,
+            data: abi.encodeCall(ERC721Mock.transferFrom, (address(_calls), leet, _testTokenId)),
+            nonce: ++nonceCur
+        });
+
+        // Call transferFrom
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        // Try to call transferFrom again without required allowance and without the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        // Try to call transferFrom again without required allowance and with the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        // safeTransferFrom (no bytes parameter - SAFE_TRANSFER_FROM_SELECTOR1) session test
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(SAFE_TRANSFER_FROM_SELECTOR1),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_erc721),
+            value: 0,
+            data: abi.encodeWithSelector(SAFE_TRANSFER_FROM_SELECTOR1, address(_calls), leet, _testTokenId),
+            nonce: ++nonceCur
+        });
+
+        // Call safeTransferFrom
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        // Try to call safeTransferFrom again without required allowance and without the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        // Try to call safeTransferFrom again without required allowance and with the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        // safeTransferFrom (with bytes parameter - SAFE_TRANSFER_FROM_SELECTOR2) session test
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createAllContractsSessionRequest(SAFE_TRANSFER_FROM_SELECTOR2),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_erc721),
+            value: 0,
+            data: abi.encodeWithSelector(SAFE_TRANSFER_FROM_SELECTOR2, address(_calls), leet, _testTokenId, ""),
+            nonce: ++nonceCur
+        });
+
+        // Call safeTransferFrom
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        // Try to call safeTransferFrom again without required allowance and without the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+
+        assertEq(leet, _erc721.ownerOf(_testTokenId));
+
+        vm.prank(leet);
+        _erc721.transferFrom(leet, address(_calls), _testTokenId);
+
+        assertEq(address(_calls), _erc721.ownerOf(_testTokenId));
+
+        // Try to call safeTransferFrom again without required allowance and with the token
+        // Should work because there is no allowance tracking
+        vm.prank(leet);
+        // vm.expectRevert(
+        //     abi.encodeWithSelector(
+        //         SessionCallsStorage.InsufficientAllowanceForERC721Transfer.selector, address(_erc721), _testTokenId
+        //     )
+        // );
+        _calls.sessionCall(_callReq);
+    }
+
     function testMagicSessionApprovalSuccess() public {
         startSession(
             address(_calls),
