@@ -263,4 +263,23 @@ abstract contract TestSessionUtilities is TestUtilities {
         );
         SessionCalls(sessionCalls).startSession(delegateAddress, req, exp, nonce, arraySingle(sig), 9999999);
     }
+
+    function updateSession(
+        address sessionCalls,
+        uint256 signingPK,
+        address delegateAddress,
+        SessionCallsStructs.SessionRequest memory addTo,
+        SessionCallsStructs.SessionRequest memory removeFrom,
+        uint256 _sessionId,
+        uint256 nonce,
+        uint256 _deadline
+    ) internal {
+        bytes memory sig = signHashAsMessage(
+            signingPK,
+            keccak256(abi.encode(delegateAddress, addTo, removeFrom, _sessionId, nonce, _deadline, block.chainid))
+        );
+        SessionCalls(sessionCalls).updateSession(
+            delegateAddress, addTo, removeFrom, _sessionId, nonce, arraySingle(sig), 9999999
+        );
+    }
 }

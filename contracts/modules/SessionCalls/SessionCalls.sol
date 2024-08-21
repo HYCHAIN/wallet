@@ -70,49 +70,47 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         // See {SessionCallsStructs.Session} for more info.
         session.allowances[address(0)][0] = _sessionRequest.nativeAllowance;
 
-        // _setFuncSelectors(_sessionRequest, session);
-        // Set function selectors
-        for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
-            for (uint256 j = 0; j < _sessionRequest.contractFunctionSelectors[i].functionSelectors.length; j++) {
-                session.contractFunctionSelectors[_sessionRequest.contractFunctionSelectors[i].aContract][_sessionRequest
-                    .contractFunctionSelectors[i].functionSelectors[j]] = true;
-            }
-        }
-
-        // _setErc20Allowances(_sessionRequest, session);
-        // Set ERC721 allowances
-        for (uint256 i = 0; i < _sessionRequest.erc20Allowances.length; i++) {
-            session.allowances[_sessionRequest.erc20Allowances[i].erc20Contract][0] =
-                _sessionRequest.erc20Allowances[i].allowance;
-        }
-
-        // _setErc721Allowances(_sessionRequest, session);
-        // Set ERC721 allowances
-        for (uint256 i = 0; i < _sessionRequest.erc721Allowances.length; i++) {
-            if (_sessionRequest.erc721Allowances[i].approveAll) {
-                session.approveAlls[_sessionRequest.erc721Allowances[i].erc721Contract] = true;
-            } else {
-                for (uint256 j = 0; j < _sessionRequest.erc721Allowances[i].tokenIds.length; j++) {
-                    session.allowances[_sessionRequest.erc721Allowances[i].erc721Contract][_sessionRequest
-                        .erc721Allowances[i].tokenIds[j]] = 1;
-                }
-            }
-        }
-
-        // _setErc1155Allowances(_sessionRequest, session);
-        // Set ERC1155 allowances
-        for (uint256 i = 0; i < _sessionRequest.erc1155Allowances.length; i++) {
-            if (_sessionRequest.erc1155Allowances[i].approveAll) {
-                session.approveAlls[_sessionRequest.erc1155Allowances[i].erc1155Contract] = true;
-            } else {
-                for (uint256 j = 0; j < _sessionRequest.erc1155Allowances[i].tokenIds.length; j++) {
-                    session.allowances[_sessionRequest.erc1155Allowances[i].erc1155Contract][_sessionRequest
-                        .erc1155Allowances[i].tokenIds[j]] = _sessionRequest.erc1155Allowances[i].allowances[j];
-                }
-            }
-        }
+        _setFuncSelectorsAndAllowances(session, _sessionRequest, true);
 
         SessionCallsStorage.layout().nextSessionId[_caller]++;
+    }
+
+    /**
+     * @dev Updates a session for a given caller. Needs sufficient controller authorization via signatures and the
+     * session must not be expired.
+     * @param _caller The caller to update the session for.
+     * @param _addToSession The request payload of permissions to be added to the session.
+     * @param _removeFromSession The request payload of permissions to be removed from the session.
+     * @param _sessionId The session ID to update. Must be the latest session. and not expired.
+     * @param _nonce The nonce of the signatures to verify against for authorization.
+     * @param _signatures The signatures of the controller(s) authorizing the session update.
+     * @param _deadline The deadline for the signatures to be submitted.
+     */
+    function updateSession(
+        address _caller,
+        SessionCallsStructs.SessionRequest calldata _addToSession,
+        SessionCallsStructs.SessionRequest calldata _removeFromSession,
+        uint256 _sessionId,
+        uint256 _nonce,
+        bytes[] calldata _signatures,
+        uint256 _deadline
+    ) external {
+        _requireMeetsControllersThresholdBytes(
+            abi.encode(_caller, _addToSession, _removeFromSession, _sessionId, _nonce, _deadline, block.chainid),
+            _deadline,
+            _signatures
+        );
+        uint256 _activeSessionId = getActiveSessionId(_caller);
+        if (_sessionId != _activeSessionId) {
+            revert SessionCallsStorage.InvalidSessionId(_sessionId, _activeSessionId);
+        }
+        SessionCallsStructs.Session storage session = SessionCallsStorage.layout().sessions[_caller][_sessionId];
+
+        // Only update the session's native allowance using the _addToSession request
+        session.allowances[address(0)][0] = _addToSession.nativeAllowance;
+
+        _setFuncSelectorsAndAllowances(session, _addToSession, true);
+        _setFuncSelectorsAndAllowances(session, _removeFromSession, false);
     }
 
     /**
@@ -205,6 +203,21 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
         }
         SessionCallsStructs.Session storage session = _l.sessions[_caller][_l.nextSessionId[_caller] - 1];
         return session.expiresAt > block.timestamp;
+    }
+
+    /**
+     * @dev Gets the active session ID for a caller. Reverts if no session is active.
+     * @param _caller The caller to get the active session ID for.
+     */
+    function getActiveSessionId(address _caller) public view returns (uint256 activeSessionId_) {
+        SessionCallsStorage.Layout storage _l = SessionCallsStorage.layout();
+        if (_l.nextSessionId[_caller] == 0) {
+            revert SessionCallsStorage.NoSessionStarted(_caller);
+        }
+        if (_l.sessions[_caller][_l.nextSessionId[_caller] - 1].expiresAt <= block.timestamp) {
+            revert SessionCallsStorage.SessionExpired();
+        }
+        activeSessionId_ = _l.nextSessionId[_caller] - 1;
     }
 
     /**
@@ -424,6 +437,54 @@ contract SessionCalls is Initializable, ISessionCalls, Calls {
             }
 
             session.allowances[_callRequest.target][_tokenId] = 0;
+        }
+    }
+
+    function _setFuncSelectorsAndAllowances(
+        SessionCallsStructs.Session storage session,
+        SessionCallsStructs.SessionRequest calldata _sessionRequest,
+        bool _isEnabled
+    ) internal {
+        // _setFuncSelectors(_sessionRequest, session);
+        // Set function selectors
+        for (uint256 i = 0; i < _sessionRequest.contractFunctionSelectors.length; i++) {
+            for (uint256 j = 0; j < _sessionRequest.contractFunctionSelectors[i].functionSelectors.length; j++) {
+                session.contractFunctionSelectors[_sessionRequest.contractFunctionSelectors[i].aContract][_sessionRequest
+                    .contractFunctionSelectors[i].functionSelectors[j]] = _isEnabled;
+            }
+        }
+
+        // _setErc20Allowances(_sessionRequest, session);
+        // Set ERC721 allowances
+        for (uint256 i = 0; i < _sessionRequest.erc20Allowances.length; i++) {
+            session.allowances[_sessionRequest.erc20Allowances[i].erc20Contract][0] =
+                _sessionRequest.erc20Allowances[i].allowance;
+        }
+
+        // _setErc721Allowances(_sessionRequest, session);
+        // Set ERC721 allowances
+        for (uint256 i = 0; i < _sessionRequest.erc721Allowances.length; i++) {
+            if (_sessionRequest.erc721Allowances[i].approveAll) {
+                session.approveAlls[_sessionRequest.erc721Allowances[i].erc721Contract] = _isEnabled;
+            } else {
+                for (uint256 j = 0; j < _sessionRequest.erc721Allowances[i].tokenIds.length; j++) {
+                    session.allowances[_sessionRequest.erc721Allowances[i].erc721Contract][_sessionRequest
+                        .erc721Allowances[i].tokenIds[j]] = _isEnabled ? 1 : 0;
+                }
+            }
+        }
+
+        // _setErc1155Allowances(_sessionRequest, session);
+        // Set ERC1155 allowances
+        for (uint256 i = 0; i < _sessionRequest.erc1155Allowances.length; i++) {
+            if (_sessionRequest.erc1155Allowances[i].approveAll) {
+                session.approveAlls[_sessionRequest.erc1155Allowances[i].erc1155Contract] = _isEnabled;
+            } else {
+                for (uint256 j = 0; j < _sessionRequest.erc1155Allowances[i].tokenIds.length; j++) {
+                    session.allowances[_sessionRequest.erc1155Allowances[i].erc1155Contract][_sessionRequest
+                        .erc1155Allowances[i].tokenIds[j]] = _sessionRequest.erc1155Allowances[i].allowances[j];
+                }
+            }
         }
     }
 

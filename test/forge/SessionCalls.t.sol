@@ -1336,4 +1336,155 @@ contract SessionCallsTest is TestBase {
 
         assertEq(address(_contract), _erc721.ownerOf(_testTokenId));
     }
+
+    function testAllowSessionPermissionUpdates() public {
+        uint256 _testTokenId = 12345;
+        _erc1155.mint(address(_calls), _testTokenId, 10);
+
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_erc1155), ERC1155Mock.setApprovalForAll.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+        CallsStructs.CallRequest memory _callReq = CallsStructs.CallRequest({
+            target: address(_erc1155),
+            value: 0,
+            data: abi.encodeCall(ERC1155Mock.setApprovalForAll, (address(_contract), true)),
+            nonce: ++nonceCur
+        });
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        startSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_contract), RandomContract.transferERC721.selector),
+            (block.timestamp + 1 days),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(10, _erc1155.balanceOf(address(_calls), _testTokenId));
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeCall(RandomContract.transferERC1155, (address(_erc1155), _testTokenId, 2)),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector,
+                address(_contract),
+                RandomContract.transferERC1155.selector
+            )
+        );
+        _calls.sessionCall(_callReq);
+
+        updateSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_contract), RandomContract.transferERC1155.selector),
+            SessionCallsStructs.SessionRequest({
+                nativeAllowance: 0,
+                contractFunctionSelectors: new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](0),
+                erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+                erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+                erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+            }),
+            _calls.getActiveSessionId(leet),
+            ++nonceCur,
+            _deadline
+        );
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(8, _erc1155.balanceOf(address(_calls), _testTokenId));
+        assertEq(2, _erc1155.balanceOf(address(_contract), _testTokenId));
+
+        // Multiple calls in the same session should be allowed
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(6, _erc1155.balanceOf(address(_calls), _testTokenId));
+        assertEq(4, _erc1155.balanceOf(address(_contract), _testTokenId));
+
+        _callReq = CallsStructs.CallRequest({
+            target: address(_contract),
+            value: 0,
+            data: abi.encodeCall(RandomContract.increment, 1),
+            nonce: ++nonceCur
+        });
+
+        vm.prank(leet);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector,
+                address(_contract),
+                RandomContract.increment.selector
+            )
+        );
+        _calls.sessionCall(_callReq);
+
+        updateSession(
+            address(_calls),
+            signingPK,
+            leet,
+            createRestrictedSessionRequest(address(_contract), RandomContract.increment.selector),
+            SessionCallsStructs.SessionRequest({
+                nativeAllowance: 0,
+                contractFunctionSelectors: new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](0),
+                erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+                erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+                erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+            }),
+            _calls.getActiveSessionId(leet),
+            ++nonceCur,
+            _deadline
+        );
+
+        assertEq(_contract.count(), 0);
+
+        vm.prank(leet);
+        _calls.sessionCall(_callReq);
+
+        assertEq(_contract.count(), 1);
+
+        updateSession(
+            address(_calls),
+            signingPK,
+            leet,
+            SessionCallsStructs.SessionRequest({
+                nativeAllowance: 0,
+                contractFunctionSelectors: new SessionCallsStructs.SessionRequest_ContractFunctionSelectors[](0),
+                erc20Allowances: new SessionCallsStructs.SessionRequest_ERC20Allowance[](0),
+                erc721Allowances: new SessionCallsStructs.SessionRequest_ERC721Allowance[](0),
+                erc1155Allowances: new SessionCallsStructs.SessionRequest_ERC1155Allowance[](0)
+            }),
+            createRestrictedSessionRequest(address(_contract), RandomContract.increment.selector),
+            _calls.getActiveSessionId(leet),
+            ++nonceCur,
+            _deadline
+        );
+
+        // removed permission successfully
+        vm.prank(leet);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SessionCallsStorage.UnauthorizedSessionCall.selector,
+                address(_contract),
+                RandomContract.increment.selector
+            )
+        );
+        _calls.sessionCall(_callReq);
+    }
 }

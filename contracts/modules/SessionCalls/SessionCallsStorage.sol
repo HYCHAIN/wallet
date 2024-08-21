@@ -51,4 +51,5 @@ library SessionCallsStorage {
         address tokenAddress, uint256 tokenId, uint256 amount, uint256 allowance
     );
     error InsufficientAllowanceForERC20Transfer(address tokenAddress, uint256 amount, uint256 allowance);
+    error InvalidSessionId(uint256 sessionIdGiven, uint256 sessionIdCurrent);
 }
